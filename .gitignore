@@ -1,0 +1,22 @@
+# Gleam build output
+*.beam
+*.ez
+/build
+erl_crash.dump
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*~
+*.swp
+*.swo
+.vs/
+.idea/
+*.user
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+*.pem
+*.key
