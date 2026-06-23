@@ -50,9 +50,14 @@ unit (compute in the base, label at the edges).
 
 ## Install
 
-```sh
-gleam add gunit
+Not on Hex — add it as a git dependency in your `gleam.toml`:
+
+```toml
+[dependencies]
+gunit = { git = "https://github.com/NguyenNgoCongPhap/gunit.git", ref = "v0.1.0" }
 ```
+
+Then `gleam deps download`.
 
 ## Maintenance policy
 
