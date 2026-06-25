@@ -3,9 +3,11 @@
 //// This root module is documentation only. Import the unit families directly:
 ////
 ////   import gunit/length    // Millimeter, Centimeter, Meter
+////   import gunit/area       // SquareMillimeter, SquareCentimeter, SquareMeter
 ////   import gunit/force      // Newton, Kilonewton, Meganewton, KilogramForce, TonneForce
 ////   import gunit/pressure   // Pascal, Kilopascal, Megapascal, Gigapascal, KgfPerCm2
 ////   import gunit/moment     // NewtonMeter, KilonewtonMeter, KilogramForceMeter, TonneForceMeter
+////   import gunit/mass       // Gram, Kilogram, Tonne
 ////   import gunit/angle      // Radian, Degree
 ////
 //// Each unit is a DISTINCT opaque type, so the compiler rejects passing one

@@ -1,5 +1,5 @@
 name = "gunit"
-version = "0.1.0"
+version = "0.2.0"
 gleam = ">= 1.4.0"
 # Library is pure Gleam (no FFI) so it builds for both targets; default to
 # javascript to match the Tauri + Lustre frontend that consumes it.

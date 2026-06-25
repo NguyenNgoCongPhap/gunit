@@ -15,8 +15,10 @@ import gleam/float
 import gleeunit
 import gleeunit/should
 import gunit/angle
+import gunit/area
 import gunit/force
 import gunit/length
+import gunit/mass
 import gunit/moment
 import gunit/pressure
 
@@ -426,5 +428,123 @@ pub fn angle_subtract_scale_test() {
   angle.scale(angle.subtract(angle.radian(3.0), angle.radian(1.0)), 0.5)
   |> angle.radian_value
   |> close(1.0)
+  |> should.be_true
+}
+
+// ── AREA (base: square meter) ──────────────────────────────────────────────
+
+pub fn square_millimeter_forward_test() {
+  // 1 mm2 = (0.001 m)^2 = 1e-6 m2.
+  area.square_millimeter(1.0)
+  |> area.square_millimeter_to_square_meter
+  |> area.square_meter_value
+  |> close(0.000001)
+  |> should.be_true
+}
+
+pub fn square_millimeter_inverse_test() {
+  area.square_meter(0.000001)
+  |> area.square_meter_to_square_millimeter
+  |> area.square_millimeter_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn square_centimeter_forward_test() {
+  // 1 cm2 = (0.01 m)^2 = 1e-4 m2.
+  area.square_centimeter(1.0)
+  |> area.square_centimeter_to_square_meter
+  |> area.square_meter_value
+  |> close(0.0001)
+  |> should.be_true
+}
+
+pub fn square_centimeter_inverse_test() {
+  area.square_meter(0.0001)
+  |> area.square_meter_to_square_centimeter
+  |> area.square_centimeter_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn area_cross_module_anchor_test() {
+  // 1 cm2 must equal (1 cm in m)^2, derived through the length module — catches
+  // a drift between the area factor and the length factor it squares.
+  let cm_in_m =
+    length.centimeter(1.0) |> length.centimeter_to_meter |> length.meter_value
+  area.square_centimeter(1.0)
+  |> area.square_centimeter_to_square_meter
+  |> area.square_meter_value
+  |> close(cm_in_m *. cm_in_m)
+  |> should.be_true
+}
+
+pub fn area_arithmetic_test() {
+  // (2 + 3) m2 scaled by 1.5 = 7.5 m2.
+  area.add(area.square_meter(2.0), area.square_meter(3.0))
+  |> area.scale(1.5)
+  |> area.square_meter_value
+  |> close(7.5)
+  |> should.be_true
+}
+
+// ── MASS (base: kilogram) ──────────────────────────────────────────────────
+
+pub fn gram_forward_test() {
+  // 1 g = 0.001 kg.
+  mass.gram(1.0)
+  |> mass.gram_to_kilogram
+  |> mass.kilogram_value
+  |> close(0.001)
+  |> should.be_true
+}
+
+pub fn gram_inverse_test() {
+  mass.kilogram(0.001)
+  |> mass.kilogram_to_gram
+  |> mass.gram_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn tonne_forward_test() {
+  // 1 t = 1000 kg (metric tonne).
+  mass.tonne(1.0)
+  |> mass.tonne_to_kilogram
+  |> mass.kilogram_value
+  |> close(1000.0)
+  |> should.be_true
+}
+
+pub fn tonne_inverse_test() {
+  mass.kilogram(1000.0)
+  |> mass.kilogram_to_tonne
+  |> mass.tonne_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn mass_tonne_gram_anchor_test() {
+  // 1 tonne = 1e6 g, reconciled through the kilogram base.
+  let g_in_kg =
+    mass.gram(1_000_000.0) |> mass.gram_to_kilogram |> mass.kilogram_value
+  mass.tonne(1.0)
+  |> mass.tonne_to_kilogram
+  |> mass.kilogram_value
+  |> close(g_in_kg)
+  |> should.be_true
+}
+
+pub fn mass_arithmetic_test() {
+  // (1500 + 500 - 1000) kg scaled by 2 = 2000 kg.
+  mass.scale(
+    mass.subtract(
+      mass.add(mass.kilogram(1500.0), mass.kilogram(500.0)),
+      mass.kilogram(1000.0),
+    ),
+    2.0,
+  )
+  |> mass.kilogram_value
+  |> close(2000.0)
   |> should.be_true
 }
