@@ -2,9 +2,10 @@
 ////
 //// Distinct opaque types `Newton`, `Kilonewton`, `Meganewton`,
 //// `KilogramForce`, `TonneForce` (coherent SI N / kN / MN plus the
-//// gravitational-metric kgf and tonne-force). Names are spelled out because
-//// PascalCase would collapse SI case (a short `Mn` cannot tell mega- from
-//// milli-newton).
+//// gravitational-metric kgf and tonne-force), plus the US-customary
+//// `PoundForce` (lbf) and `KipForce` (kip = 1000 lbf). Names are spelled out
+//// because PascalCase would collapse SI case (a short `Mn` cannot tell
+//// mega- from milli-newton).
 ////
 //// Arithmetic is provided on the canonical base unit (`Newton`). Every factor
 //// is golden-tested.
@@ -15,6 +16,9 @@
 // ── factors: multiply a value in <unit> by FACTOR to get newtons ──
 // kgf is exact by definition: 1 kgf = standard gravity g0 = 9.80665 N.
 // tonne-force = 1000 kgf (the tonne, symbol t). Source: NIST SP 811 / ISO 80000-4.
+// lbf is exact by definition: 1 lbf = avoirdupois pound (0.45359237 kg) x
+// standard gravity g0 (9.80665 m/s2) = 4.4482216152605 N. Source: NIST SP 811.
+// kip = 1000 lbf (US-customary, common in structural steel design).
 
 const kilonewton_factor = 1000.0
 
@@ -23,6 +27,10 @@ const meganewton_factor = 1_000_000.0
 const kilogram_force_factor = 9.80665
 
 const tonne_force_factor = 9806.65
+
+const pound_force_factor = 4.4482216152605
+
+const kip_force_factor = 4448.2216152605
 
 // ── opaque types ──
 
@@ -51,6 +59,16 @@ pub opaque type TonneForce {
   TonneForce(value: Float)
 }
 
+/// Force in pound-force (lbf). 1 lbf = 4.4482216152605 N.
+pub opaque type PoundForce {
+  PoundForce(value: Float)
+}
+
+/// Force in kip-force (kip = 1000 lbf). 1 kip = 4448.2216152605 N.
+pub opaque type KipForce {
+  KipForce(value: Float)
+}
+
 // ── constructors ──
 
 pub fn newton(v: Float) -> Newton {
@@ -71,6 +89,14 @@ pub fn kilogram_force(v: Float) -> KilogramForce {
 
 pub fn tonne_force(v: Float) -> TonneForce {
   TonneForce(v)
+}
+
+pub fn pound_force(v: Float) -> PoundForce {
+  PoundForce(v)
+}
+
+pub fn kip_force(v: Float) -> KipForce {
+  KipForce(v)
 }
 
 // ── extractors ──
@@ -95,6 +121,14 @@ pub fn tonne_force_value(x: TonneForce) -> Float {
   x.value
 }
 
+pub fn pound_force_value(x: PoundForce) -> Float {
+  x.value
+}
+
+pub fn kip_force_value(x: KipForce) -> Float {
+  x.value
+}
+
 // ── to base (newton) ──
 
 pub fn kilonewton_to_newton(x: Kilonewton) -> Newton {
@@ -113,6 +147,14 @@ pub fn tonne_force_to_newton(x: TonneForce) -> Newton {
   Newton(x.value *. tonne_force_factor)
 }
 
+pub fn pound_force_to_newton(x: PoundForce) -> Newton {
+  Newton(x.value *. pound_force_factor)
+}
+
+pub fn kip_force_to_newton(x: KipForce) -> Newton {
+  Newton(x.value *. kip_force_factor)
+}
+
 // ── from base (newton) ──
 
 pub fn newton_to_kilonewton(x: Newton) -> Kilonewton {
@@ -129,6 +171,14 @@ pub fn newton_to_kilogram_force(x: Newton) -> KilogramForce {
 
 pub fn newton_to_tonne_force(x: Newton) -> TonneForce {
   TonneForce(x.value /. tonne_force_factor)
+}
+
+pub fn newton_to_pound_force(x: Newton) -> PoundForce {
+  PoundForce(x.value /. pound_force_factor)
+}
+
+pub fn newton_to_kip_force(x: Newton) -> KipForce {
+  KipForce(x.value /. kip_force_factor)
 }
 
 // ── arithmetic on the base unit ──

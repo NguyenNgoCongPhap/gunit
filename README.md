@@ -1,7 +1,7 @@
 # gunit
 
-Compile-time **unit-label safety** for Gleam — SI and common metric units —
-with conversion factors pinned by golden tests.
+Compile-time **unit-label safety** for Gleam — SI, common metric, and common
+US-customary units — with conversion factors pinned by golden tests.
 
 Each unit (`Millimeter`, `Meter`, `Newton`, `Kilonewton`, `Megapascal`, ...) is a
 distinct opaque type, so the compiler rejects passing one where another is
@@ -31,20 +31,20 @@ ambiguous between mega- and milli-.
 Gleam has no type-level arithmetic, so — unlike Rust [`uom`](https://docs.rs/uom)
 — `length / time -> speed` is not derived for you; you write explicit conversion
 functions. The trade is deliberate: a small, robust core. Conversions route
-through one SI base per family, and every factor is pinned by a golden test
-(forward AND inverse) against a cited source.
+through one base unit per family (SI where available), and every factor is
+pinned by a golden test (forward AND inverse) against a cited source.
 
 ## Units
 
-| Family   | Units                                                            | Base   |
-| -------- | ---------------------------------------------------------------- | ------ |
-| length   | `Millimeter` `Centimeter` `Meter`                                | meter  |
-| force    | `Newton` `Kilonewton` `Meganewton` `KilogramForce` `TonneForce`  | newton |
-| pressure | `Pascal` `Kilopascal` `Megapascal` `Gigapascal` `KgfPerCm2`      | pascal |
-| moment   | `NewtonMeter` `KilonewtonMeter` `KilogramForceMeter` `TonneForceMeter` | N.m |
-| angle    | `Radian` `Degree`                                                | radian |
-| density  | `KgPerMmCubed` `TonPerMCubed` `KgPerMCubed`                      | kg/m3  |
-| time     | `Second` `Millisecond`                                           | second |
+| Family   | Units                                                                        | Base   |
+| -------- | ----------------------------------------------------------------------------- | ------ |
+| length   | `Millimeter` `Centimeter` `Meter` `Inch` `Foot`                              | meter  |
+| force    | `Newton` `Kilonewton` `Meganewton` `KilogramForce` `TonneForce` `PoundForce` `KipForce` | newton |
+| pressure | `Pascal` `Kilopascal` `Megapascal` `Gigapascal` `KgfPerCm2`                  | pascal |
+| moment   | `NewtonMeter` `KilonewtonMeter` `KilogramForceMeter` `TonneForceMeter`       | N.m    |
+| angle    | `Radian` `Degree`                                                            | radian |
+| density  | `KgPerMmCubed` `TonPerMCubed` `KgPerMCubed`                                  | kg/m3  |
+| time     | `Second` `Millisecond`                                                       | second |
 
 Each module gives: a constructor + value extractor per unit, `to_base` /
 `from_base` conversions, and `add` / `subtract` / `scale` on the family's base

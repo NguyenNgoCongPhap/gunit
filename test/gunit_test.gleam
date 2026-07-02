@@ -72,6 +72,42 @@ pub fn centimeter_inverse_test() {
   |> should.be_true
 }
 
+pub fn inch_forward_test() {
+  // 1 in = 0.0254 m (exact, international yard-and-pound agreement 1959).
+  length.inch(1.0)
+  |> length.inch_to_meter
+  |> length.meter_value
+  |> close(0.0254)
+  |> should.be_true
+}
+
+pub fn inch_inverse_test() {
+  // 0.0254 m = 1 in.
+  length.meter(0.0254)
+  |> length.meter_to_inch
+  |> length.inch_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn foot_forward_test() {
+  // 1 ft = 0.3048 m (exact, = 12 in).
+  length.foot(1.0)
+  |> length.foot_to_meter
+  |> length.meter_value
+  |> close(0.3048)
+  |> should.be_true
+}
+
+pub fn foot_inverse_test() {
+  // 0.3048 m = 1 ft.
+  length.meter(0.3048)
+  |> length.meter_to_foot
+  |> length.foot_value
+  |> close(1.0)
+  |> should.be_true
+}
+
 pub fn length_round_trip_test() {
   // mm -> m -> mm returns the original.
   let original = 6000.0
@@ -159,6 +195,40 @@ pub fn tonne_force_inverse_test() {
   force.newton(9806.65)
   |> force.newton_to_tonne_force
   |> force.tonne_force_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn pound_force_forward_test() {
+  // 1 lbf = 4.4482216152605 N (exact: avoirdupois pound x standard gravity).
+  force.pound_force(1.0)
+  |> force.pound_force_to_newton
+  |> force.newton_value
+  |> close(4.4482216152605)
+  |> should.be_true
+}
+
+pub fn pound_force_inverse_test() {
+  force.newton(4.4482216152605)
+  |> force.newton_to_pound_force
+  |> force.pound_force_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn kip_force_forward_test() {
+  // 1 kip = 1000 lbf = 4448.2216152605 N.
+  force.kip_force(1.0)
+  |> force.kip_force_to_newton
+  |> force.newton_value
+  |> close(4448.2216152605)
+  |> should.be_true
+}
+
+pub fn kip_force_inverse_test() {
+  force.newton(4448.2216152605)
+  |> force.newton_to_kip_force
+  |> force.kip_force_value
   |> close(1.0)
   |> should.be_true
 }
