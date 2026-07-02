@@ -43,6 +43,8 @@ through one SI base per family, and every factor is pinned by a golden test
 | pressure | `Pascal` `Kilopascal` `Megapascal` `Gigapascal` `KgfPerCm2`      | pascal |
 | moment   | `NewtonMeter` `KilonewtonMeter` `KilogramForceMeter` `TonneForceMeter` | N.m |
 | angle    | `Radian` `Degree`                                                | radian |
+| density  | `KgPerMmCubed` `TonPerMCubed` `KgPerMCubed`                      | kg/m3  |
+| time     | `Second` `Millisecond`                                           | second |
 
 Each module gives: a constructor + value extractor per unit, `to_base` /
 `from_base` conversions, and `add` / `subtract` / `scale` on the family's base

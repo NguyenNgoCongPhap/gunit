@@ -9,6 +9,8 @@
 ////   import gunit/moment     // NewtonMeter, KilonewtonMeter, KilogramForceMeter, TonneForceMeter
 ////   import gunit/mass       // Gram, Kilogram, Tonne
 ////   import gunit/angle      // Radian, Degree
+////   import gunit/density    // KgPerMCubed, KgPerMmCubed, TonPerMCubed
+////   import gunit/time       // Second, Millisecond
 ////
 //// Each unit is a DISTINCT opaque type, so the compiler rejects passing one
 //// where another is expected — catching the "mm used as m" / "kPa used as MPa"

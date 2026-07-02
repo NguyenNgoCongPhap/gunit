@@ -16,11 +16,13 @@ import gleeunit
 import gleeunit/should
 import gunit/angle
 import gunit/area
+import gunit/density
 import gunit/force
 import gunit/length
 import gunit/mass
 import gunit/moment
 import gunit/pressure
+import gunit/time
 
 pub fn main() {
   gleeunit.main()
@@ -546,5 +548,89 @@ pub fn mass_arithmetic_test() {
   )
   |> mass.kilogram_value
   |> close(2000.0)
+  |> should.be_true
+}
+
+// ── DENSITY (base: KgPerMCubed) ────────────────────────────────────────────
+
+pub fn kg_per_mm_cubed_forward_test() {
+  // 1 kg/mm3 = 1e9 kg/m3.
+  density.kg_per_mm_cubed(1.0)
+  |> density.kg_per_mm_cubed_to_kg_per_m_cubed
+  |> density.kg_per_m_cubed_value
+  |> close(1_000_000_000.0)
+  |> should.be_true
+}
+
+pub fn kg_per_mm_cubed_inverse_test() {
+  // 1e9 kg/m3 = 1 kg/mm3.
+  density.kg_per_m_cubed(1_000_000_000.0)
+  |> density.kg_per_m_cubed_to_kg_per_mm_cubed
+  |> density.kg_per_mm_cubed_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn ton_per_m_cubed_forward_test() {
+  // 1 t/m3 = 1000 kg/m3.
+  density.ton_per_m_cubed(1.0)
+  |> density.ton_per_m_cubed_to_kg_per_m_cubed
+  |> density.kg_per_m_cubed_value
+  |> close(1000.0)
+  |> should.be_true
+}
+
+pub fn ton_per_m_cubed_inverse_test() {
+  // 1000 kg/m3 = 1 t/m3.
+  density.kg_per_m_cubed(1000.0)
+  |> density.kg_per_m_cubed_to_ton_per_m_cubed
+  |> density.ton_per_m_cubed_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn density_arithmetic_test() {
+  // (7000 + 1000 - 500) kg/m3 scaled by 2 = 15000 kg/m3.
+  density.scale(
+    density.subtract(
+      density.add(
+        density.kg_per_m_cubed(7000.0),
+        density.kg_per_m_cubed(1000.0),
+      ),
+      density.kg_per_m_cubed(500.0),
+    ),
+    2.0,
+  )
+  |> density.kg_per_m_cubed_value
+  |> close(15_000.0)
+  |> should.be_true
+}
+
+// ── TIME (base: Second) ────────────────────────────────────────────────────
+
+pub fn millisecond_forward_test() {
+  // 1 ms = 0.001 s.
+  time.millisecond(1.0)
+  |> time.millisecond_to_second
+  |> time.second_value
+  |> close(0.001)
+  |> should.be_true
+}
+
+pub fn millisecond_inverse_test() {
+  // 0.001 s = 1 ms.
+  time.second(0.001)
+  |> time.second_to_millisecond
+  |> time.millisecond_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn time_arithmetic_test() {
+  // (2 s + 3 s) scaled by 1.5 = 7.5 s.
+  time.add(time.second(2.0), time.second(3.0))
+  |> time.scale(1.5)
+  |> time.second_value
+  |> close(7.5)
   |> should.be_true
 }
