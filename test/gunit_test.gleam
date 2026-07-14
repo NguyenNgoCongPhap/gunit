@@ -17,11 +17,15 @@ import gleeunit/should
 import gunit/angle
 import gunit/area
 import gunit/density
+import gunit/dimensionless
 import gunit/force
+import gunit/frequency
+import gunit/inertia
 import gunit/length
 import gunit/mass
 import gunit/moment
 import gunit/pressure
+import gunit/stiffness
 import gunit/time
 
 pub fn main() {
@@ -702,5 +706,82 @@ pub fn time_arithmetic_test() {
   |> time.scale(1.5)
   |> time.second_value
   |> close(7.5)
+  |> should.be_true
+}
+
+// ── INERTIA (single display unit: mm4) ────────────────────────────────────
+
+pub fn inertia_roundtrip_test() {
+  // The value survives the brand unchanged; the brand is the point.
+  inertia.mm4(1.2345e8)
+  |> inertia.mm4_value
+  |> close(1.2345e8)
+  |> should.be_true
+}
+
+pub fn inertia_arithmetic_test() {
+  // (2e6 + 3e6) mm4 scaled by 0.5 = 2.5e6 mm4.
+  inertia.add(inertia.mm4(2.0e6), inertia.mm4(3.0e6))
+  |> inertia.scale(0.5)
+  |> inertia.mm4_value
+  |> close(2.5e6)
+  |> should.be_true
+}
+
+// ── FREQUENCY (single display unit: Hz) ───────────────────────────────────
+
+pub fn frequency_roundtrip_test() {
+  frequency.hz(3.14)
+  |> frequency.hz_value
+  |> close(3.14)
+  |> should.be_true
+}
+
+pub fn frequency_arithmetic_test() {
+  // (1.5 Hz + 0.5 Hz) scaled by 2 = 4 Hz.
+  frequency.add(frequency.hz(1.5), frequency.hz(0.5))
+  |> frequency.scale(2.0)
+  |> frequency.hz_value
+  |> close(4.0)
+  |> should.be_true
+}
+
+// ── STIFFNESS (two unrelated dimensions, no conversion) ───────────────────
+
+pub fn stiffness_translation_roundtrip_test() {
+  stiffness.kn_per_m(1.0e5)
+  |> stiffness.kn_per_m_value
+  |> close(1.0e5)
+  |> should.be_true
+}
+
+pub fn stiffness_rotation_roundtrip_test() {
+  stiffness.kn_m_per_rad(2.5e4)
+  |> stiffness.kn_m_per_rad_value
+  |> close(2.5e4)
+  |> should.be_true
+}
+
+// ── DIMENSIONLESS (four semantic brands over one primitive) ───────────────
+
+pub fn dimensionless_roundtrip_test() {
+  dimensionless.ratio(0.87)
+  |> dimensionless.ratio_value
+  |> close(0.87)
+  |> should.be_true
+
+  dimensionless.slenderness(120.0)
+  |> dimensionless.slenderness_value
+  |> close(120.0)
+  |> should.be_true
+
+  dimensionless.fraction(0.42)
+  |> dimensionless.fraction_value
+  |> close(0.42)
+  |> should.be_true
+
+  dimensionless.participation_pct(93.5)
+  |> dimensionless.participation_pct_value
+  |> close(93.5)
   |> should.be_true
 }

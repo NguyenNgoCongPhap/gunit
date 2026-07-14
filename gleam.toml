@@ -1,11 +1,11 @@
 name = "gunit"
-version = "0.4.0"
+version = "0.5.0"
 gleam = ">= 1.4.0"
 # Library is pure Gleam (no FFI) so it builds for both targets; default to
 # javascript to match the Tauri + Lustre frontend that consumes it.
 target = "javascript"
 licences = ["MIT"]
-description = "Compile-time unit-label safety for SI, common metric, and common US-customary units in Gleam, with golden-tested conversion factors."
+description = "Compile-time unit-label safety for engineering values in Gleam: SI, common metric, and common US-customary units with golden-tested conversion factors, plus single-unit and dimensionless semantic brands."
 
 repository = { type = "github", user = "NguyenNgoCongPhap", repo = "gunit" }
 
