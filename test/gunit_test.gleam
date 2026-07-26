@@ -1,7 +1,8 @@
-//// Golden tests pinning every conversion factor in BOTH directions (forward
-//// `*_to_base` and inverse `base_to_*`). Each expected value follows the factor
-//// defined and cited in the corresponding `src/gunit/*` module (NIST SP 811 /
-//// ISO 80000).
+//// Golden tests pinning every conversion factor in BOTH directions. A conversion
+//// names the family's concrete base unit — `kilonewton_to_newton`,
+//// `millimeter_to_meter` — never the word "base"; no `*_to_base` function exists.
+//// Each expected value follows the factor defined and cited in the corresponding
+//// `src/gunit/*` module (NIST SP 811 / ISO 80000).
 ////
 //// A wrong factor or a typo'd divisor here is exactly the silent bug this
 //// library exists to prevent. Each test drives the SAME conversion path the
@@ -783,5 +784,42 @@ pub fn dimensionless_roundtrip_test() {
   dimensionless.participation_pct(93.5)
   |> dimensionless.participation_pct_value
   |> close(93.5)
+  |> should.be_true
+}
+
+// ── SUBTRACT, the arithmetic half four families promised and none exercised ──
+// Each of these families ships `subtract` and its catalog entry accepts add,
+// subtract, and scale. Only add and scale were driven, so removing `subtract`
+// would have left the suite green while the stated contract broke.
+
+pub fn area_subtract_test() {
+  // 5 m2 - 2 m2 = 3 m2.
+  area.subtract(area.square_meter(5.0), area.square_meter(2.0))
+  |> area.square_meter_value
+  |> close(3.0)
+  |> should.be_true
+}
+
+pub fn time_subtract_test() {
+  // 5 s - 2 s = 3 s.
+  time.subtract(time.second(5.0), time.second(2.0))
+  |> time.second_value
+  |> close(3.0)
+  |> should.be_true
+}
+
+pub fn inertia_subtract_test() {
+  // 5e6 mm4 - 2e6 mm4 = 3e6 mm4.
+  inertia.subtract(inertia.mm4(5.0e6), inertia.mm4(2.0e6))
+  |> inertia.mm4_value
+  |> close(3.0e6)
+  |> should.be_true
+}
+
+pub fn frequency_subtract_test() {
+  // 5 Hz - 2 Hz = 3 Hz.
+  frequency.subtract(frequency.hz(5.0), frequency.hz(2.0))
+  |> frequency.hz_value
+  |> close(3.0)
   |> should.be_true
 }
