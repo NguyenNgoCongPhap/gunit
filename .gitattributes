@@ -1,0 +1,19 @@
+# Check text out with LF on every platform.
+#
+# Without this, a Windows clone with core.autocrlf=true gets CRLF, and
+# `gleam format --check` reports every source file as unformatted — a gate failure
+# with nothing wrong in the repository. The blobs are already LF and CI on Linux
+# passes, so the lie only appears on the machine a contributor actually works on.
+* text=auto eol=lf
+
+*.gleam text eol=lf
+*.toml  text eol=lf
+*.md    text eol=lf
+*.py    text eol=lf
+*.yml   text eol=lf
+
+# Never touched by end-of-line conversion.
+*.png binary
+*.jpg binary
+*.ez  binary
+*.beam binary
