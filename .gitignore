@@ -4,6 +4,10 @@
 /build
 erl_crash.dump
 
+# Python bytecode (scripts/)
+__pycache__/
+*.pyc
+
 # OS / editor
 .DS_Store
 Thumbs.db
