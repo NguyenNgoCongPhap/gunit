@@ -24,3 +24,7 @@ Thumbs.db
 !.env.example
 *.pem
 *.key
+
+# Local project-management artifacts
+/docs/
+/scripts/verify_catalog.py
