@@ -28,3 +28,10 @@ Thumbs.db
 # Local project-management artifacts
 /docs/
 /scripts/verify_catalog.py
+
+# Agent rule files — local only, never publish
+AGENTS.md
+CLAUDE.md
+.claude/
+.codex/
+.grok/
