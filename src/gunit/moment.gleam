@@ -19,6 +19,13 @@ const kilogram_force_meter_factor = 9.80665
 
 const tonne_force_meter_factor = 9806.65
 
+// lbf.ft and kip.ft: 1 lbf = 4.4482216152605 N (NIST SP 811), 1 ft = 0.3048 m
+// exact (international yard-and-pound). 1 lbf.ft = 1.3558179483314004 N.m;
+// kip.ft = 1000 lbf.ft = 1355.8179483314004 N.m (US structural steel design).
+const pound_foot_factor = 1.3558179483314004
+
+const kip_foot_factor = 1355.8179483314004
+
 // ── opaque types ──
 
 /// Bending moment in newton-meters. SI canonical base.
@@ -41,6 +48,17 @@ pub opaque type TonneForceMeter {
   TonneForceMeter(value: Float)
 }
 
+/// Bending moment in pound-force-feet (lbf.ft). 1 lbf.ft = 1.3558179483314004 N.m.
+pub opaque type PoundFoot {
+  PoundFoot(value: Float)
+}
+
+/// Bending moment in kip-feet (kip.ft = 1000 lbf.ft, US structural).
+/// 1 kip.ft = 1355.8179483314004 N.m.
+pub opaque type KipFoot {
+  KipFoot(value: Float)
+}
+
 // ── constructors ──
 
 pub fn newton_meter(v: Float) -> NewtonMeter {
@@ -57,6 +75,14 @@ pub fn kilogram_force_meter(v: Float) -> KilogramForceMeter {
 
 pub fn tonne_force_meter(v: Float) -> TonneForceMeter {
   TonneForceMeter(v)
+}
+
+pub fn pound_foot(v: Float) -> PoundFoot {
+  PoundFoot(v)
+}
+
+pub fn kip_foot(v: Float) -> KipFoot {
+  KipFoot(v)
 }
 
 // ── extractors ──
@@ -77,6 +103,14 @@ pub fn tonne_force_meter_value(x: TonneForceMeter) -> Float {
   x.value
 }
 
+pub fn pound_foot_value(x: PoundFoot) -> Float {
+  x.value
+}
+
+pub fn kip_foot_value(x: KipFoot) -> Float {
+  x.value
+}
+
 // ── to base (newton-meter) ──
 
 pub fn kilonewton_meter_to_newton_meter(x: KilonewtonMeter) -> NewtonMeter {
@@ -93,6 +127,14 @@ pub fn tonne_force_meter_to_newton_meter(x: TonneForceMeter) -> NewtonMeter {
   NewtonMeter(x.value *. tonne_force_meter_factor)
 }
 
+pub fn pound_foot_to_newton_meter(x: PoundFoot) -> NewtonMeter {
+  NewtonMeter(x.value *. pound_foot_factor)
+}
+
+pub fn kip_foot_to_newton_meter(x: KipFoot) -> NewtonMeter {
+  NewtonMeter(x.value *. kip_foot_factor)
+}
+
 // ── from base (newton-meter) ──
 
 pub fn newton_meter_to_kilonewton_meter(x: NewtonMeter) -> KilonewtonMeter {
@@ -107,6 +149,14 @@ pub fn newton_meter_to_kilogram_force_meter(
 
 pub fn newton_meter_to_tonne_force_meter(x: NewtonMeter) -> TonneForceMeter {
   TonneForceMeter(x.value /. tonne_force_meter_factor)
+}
+
+pub fn newton_meter_to_pound_foot(x: NewtonMeter) -> PoundFoot {
+  PoundFoot(x.value /. pound_foot_factor)
+}
+
+pub fn newton_meter_to_kip_foot(x: NewtonMeter) -> KipFoot {
+  KipFoot(x.value /. kip_foot_factor)
 }
 
 // ── arithmetic on the base unit ──

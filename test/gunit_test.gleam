@@ -400,6 +400,40 @@ pub fn tonne_force_meter_inverse_test() {
   |> should.be_true
 }
 
+pub fn pound_foot_forward_test() {
+  // 1 lbf.ft = 1.3558179483314004 N.m (4.4482216152605 N x 0.3048 m).
+  moment.pound_foot(1.0)
+  |> moment.pound_foot_to_newton_meter
+  |> moment.newton_meter_value
+  |> close(1.3558179483314004)
+  |> should.be_true
+}
+
+pub fn pound_foot_inverse_test() {
+  moment.newton_meter(1.3558179483314004)
+  |> moment.newton_meter_to_pound_foot
+  |> moment.pound_foot_value
+  |> close(1.0)
+  |> should.be_true
+}
+
+pub fn kip_foot_forward_test() {
+  // 1 kip.ft = 1000 lbf.ft = 1355.8179483314004 N.m.
+  moment.kip_foot(1.0)
+  |> moment.kip_foot_to_newton_meter
+  |> moment.newton_meter_value
+  |> close(1355.8179483314004)
+  |> should.be_true
+}
+
+pub fn kip_foot_inverse_test() {
+  moment.newton_meter(1355.8179483314004)
+  |> moment.newton_meter_to_kip_foot
+  |> moment.kip_foot_value
+  |> close(1.0)
+  |> should.be_true
+}
+
 pub fn moment_add_test() {
   // 120 kN.m + 80 kN.m = 200 kN.m = 200000 N.m.
   moment.add(
