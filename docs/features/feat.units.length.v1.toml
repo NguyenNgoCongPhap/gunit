@@ -1,0 +1,50 @@
+schema_version = 1
+id = "feat.units.length.v1"
+name = "Length brands and conversions"
+status = "completed"
+intensity = "calc"
+intent = "Separates metric and US-customary lengths while routing explicit conversion and arithmetic through Meter."
+consequence_of_change = "A silent factor, brand, or canonical-unit change can rescale geometry and invalidate every downstream area, volume, stiffness, or load calculation."
+acceptance = [
+  "Millimeter, Centimeter, Meter, Inch, and Foot remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Each noncanonical-to-Meter conversion multiplies by its cited factor, and each inverse conversion divides by the same factor.",
+  "Add, subtract, and scale accept the canonical Meter brand and return Meter.",
+  "A conversion between two noncanonical brands requires an explicit path through Meter.",
+]
+non_goals = [
+  "Deriving area or volume brands from length arithmetic.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+  "Providing direct conversion between noncanonical brands or arithmetic on them.",
+]
+failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
+brands = [ "Millimeter", "Centimeter", "Meter", "Inch", "Foot" ]
+units = "Brands are Meter as the canonical arithmetic unit plus Millimeter, Centimeter, Inch, and Foot as edge/display units; constructors retain values in their named unit."
+factors = [
+  "1 millimeter = 0.001 meter (src/gunit/length.gleam:19)",
+  "1 centimeter = 0.01 meter (src/gunit/length.gleam:21)",
+  "1 inch = 0.0254 meter (src/gunit/length.gleam:23)",
+  "1 foot = 0.3048 meter (src/gunit/length.gleam:25)",
+]
+golden_tests = [
+  "millimeter_forward_test (test/gunit_test.gleam)",
+  "millimeter_inverse_test (test/gunit_test.gleam)",
+  "centimeter_forward_test (test/gunit_test.gleam)",
+  "centimeter_inverse_test (test/gunit_test.gleam)",
+  "inch_forward_test (test/gunit_test.gleam)",
+  "inch_inverse_test (test/gunit_test.gleam)",
+  "foot_forward_test (test/gunit_test.gleam)",
+  "foot_inverse_test (test/gunit_test.gleam)",
+]
+provenance = "Metric factors follow SI prefixes; inch and foot follow the international yard-and-pound agreement cited by the source as NIST SP 811 (src/gunit/length.gleam:16, src/gunit/length.gleam:17)."
+
+# Edge cases
+# Zero and negative lengths are accepted. A conversion round trip can incur ordinary
+# Float rounding and is not promised to reproduce a bit-identical Float.
+#
+# Assumption set
+# Each conversion is a linear scale with no offset. Noncanonical brands cross through
+# Meter, and arithmetic is available only after values share that canonical brand.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned brand.

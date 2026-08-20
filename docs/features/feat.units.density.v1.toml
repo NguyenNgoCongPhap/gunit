@@ -1,0 +1,44 @@
+schema_version = 1
+id = "feat.units.density.v1"
+name = "Density brands and conversions"
+status = "completed"
+intensity = "calc"
+intent = "Separates supported mass-density representations and provides explicit conversion and arithmetic through kilograms per cubic meter."
+consequence_of_change = "A silent factor or canonical-unit change can misstate material mass by orders of magnitude and corrupt every load or inertia calculation built from density."
+acceptance = [
+  "KgPerMmCubed, TonPerMCubed, and KgPerMCubed remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Each noncanonical-to-KgPerMCubed conversion multiplies by its cited factor, and each inverse conversion divides by the same factor.",
+  "Add, subtract, and scale accept the canonical KgPerMCubed brand and return KgPerMCubed.",
+  "A conversion between the two noncanonical brands requires an explicit path through KgPerMCubed.",
+]
+non_goals = [
+  "Providing material reference densities or selecting a density from a material name.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+  "Providing direct noncanonical conversion, volume conversion, or mass-from-volume calculation.",
+]
+failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
+brands = [ "KgPerMmCubed", "TonPerMCubed", "KgPerMCubed" ]
+units = "Brands are KgPerMmCubed and metric-tonne-per-cubic-meter TonPerMCubed as edge/display units, with KgPerMCubed as the canonical arithmetic unit."
+factors = [
+  "1 kg/mm^3 = 1_000_000_000.0 kg/m^3 (src/gunit/density.gleam:17)",
+  "1 metric tonne/m^3 = 1000.0 kg/m^3 (src/gunit/density.gleam:19)",
+]
+golden_tests = [
+  "kg_per_mm_cubed_forward_test (test/gunit_test.gleam)",
+  "kg_per_mm_cubed_inverse_test (test/gunit_test.gleam)",
+  "ton_per_m_cubed_forward_test (test/gunit_test.gleam)",
+  "ton_per_m_cubed_inverse_test (test/gunit_test.gleam)",
+]
+provenance = "The factors follow the module's cubic-metric scaling and metric-tonne relationship; the source cites no external authority (src/gunit/density.gleam:15, src/gunit/density.gleam:28)."
+
+# Edge cases
+# Zero and negative densities are accepted. A conversion round trip can incur ordinary
+# Float rounding and is not promised to reproduce a bit-identical Float.
+#
+# Assumption set
+# Each conversion is a linear scale with no offset. TonPerMCubed means metric tonnes per
+# cubic meter. Noncanonical values must cross through KgPerMCubed before arithmetic.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned brand.

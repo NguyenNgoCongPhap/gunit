@@ -1,0 +1,32 @@
+schema_version = 1
+id = "feat.units.frequency.v1"
+name = "Frequency brand"
+status = "completed"
+intensity = "light"
+intent = "Brands modal-analysis frequency values as Hz so they cannot be silently confused with unlabelled or time-domain Floats."
+consequence_of_change = "Removing or repurposing the Hz brand can allow frequency and period values to cross signatures silently and invert the meaning of dynamic results."
+acceptance = [
+  "Hz remains an opaque single-unit brand with a direct constructor and raw-value extractor.",
+  "The constructor stores its supplied Float unchanged, and the extractor returns that raw Float.",
+  "Add, subtract, and scale accept Hz and return Hz.",
+  "The module exposes no conversion between frequency and period.",
+]
+non_goals = [
+  "Computing period, angular frequency, or any reciprocal time quantity.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+  "Providing additional frequency display units.",
+]
+failure = "No explicit failure path exists: construction, extraction, and same-brand arithmetic return directly without validation, clamping, or normalization; Float behavior is inherited from the underlying operations."
+brands = [ "Hz" ]
+
+# Edge cases
+# Zero and negative frequencies are accepted, and scaling by any Float is allowed.
+#
+# Assumption set
+# There is nothing to convert because Hz is the only unit brand. Its whole value is
+# preventing a frequency or period mix-up at a function signature; period remains a
+# separate physical quantity in the time family.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned Hz.

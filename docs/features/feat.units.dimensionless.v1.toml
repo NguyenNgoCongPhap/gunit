@@ -1,0 +1,32 @@
+schema_version = 1
+id = "feat.units.dimensionless.v1"
+name = "Dimensionless semantic brands"
+status = "completed"
+intensity = "light"
+intent = "Prevents dimensionless engineering values with different meanings from being interchanged at function signatures."
+consequence_of_change = "Weakening or repurposing a brand can let ratios, slenderness values, fractions, and participation percentages enter the wrong downstream slots without a type error."
+acceptance = [
+  "Ratio, Slenderness, Fraction, and ParticipationPct remain distinct opaque brands.",
+  "Each constructor stores its supplied Float unchanged, and each matching extractor returns that raw Float.",
+  "The module exposes no conversion or arithmetic between the four meanings.",
+  "Documented range meanings remain conventions rather than runtime validation.",
+]
+non_goals = [
+  "Converting Fraction to ParticipationPct or converting any other pair of semantic brands.",
+  "Enforcing documented ranges, finiteness, sign, or engineering validity.",
+  "Providing arithmetic, comparison, aggregation, or formatting helpers.",
+]
+failure = "No explicit failure path exists: every constructor accepts the supplied Float without validation, and every extractor returns it unchanged; no range, finiteness, or physical-plausibility check occurs."
+brands = [ "Ratio", "Slenderness", "Fraction", "ParticipationPct" ]
+
+# Edge cases
+# Values outside the documented conventions, including negative values, are still
+# constructible. The types communicate meaning but do not prove validity.
+#
+# Assumption set
+# There is nothing to convert: every brand wraps a dimensionless raw Float. The entire
+# value of the family is preventing a meaning mix-up at a function signature.
+#
+# Exact failure semantics
+# Construction and extraction return directly. There is no Result-returning branch,
+# explicit panic path, clamping, normalization, or cross-brand operation.

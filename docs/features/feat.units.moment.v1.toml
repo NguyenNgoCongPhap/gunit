@@ -1,0 +1,53 @@
+schema_version = 1
+id = "feat.units.moment.v1"
+name = "Moment brands and conversions"
+status = "completed"
+intensity = "calc"
+intent = "Separates SI, gravitational-metric, and US-customary bending-moment representations while routing explicit conversion and arithmetic through NewtonMeter."
+consequence_of_change = "A silent factor, brand, or canonical-unit change can rescale bending actions and invalidate downstream equilibrium and member-design results."
+acceptance = [
+  "All six supported bending-moment representations remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Each noncanonical-to-NewtonMeter conversion multiplies by its cited factor, and each inverse conversion divides by the same factor.",
+  "Add, subtract, and scale accept the canonical NewtonMeter brand and return NewtonMeter.",
+  "A conversion between two noncanonical brands requires an explicit path through NewtonMeter.",
+]
+non_goals = [
+  "Deriving moment by multiplying force and length brands.",
+  "Validating sign convention, magnitude, finiteness, or physical plausibility.",
+  "Providing direct noncanonical conversion or arithmetic on non-NewtonMeter brands.",
+]
+failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
+brands = [ "NewtonMeter", "KilonewtonMeter", "KilogramForceMeter", "TonneForceMeter", "PoundFoot", "KipFoot" ]
+units = "Brands are NewtonMeter as the canonical arithmetic unit plus KilonewtonMeter, KilogramForceMeter, TonneForceMeter, PoundFoot, and KipFoot as edge/display units."
+factors = [
+  "1 kN*m = 1000.0 N*m (src/gunit/moment.gleam:16)",
+  "1 kgf*m = 9.80665 N*m (src/gunit/moment.gleam:18)",
+  "1 tonne-force*m = 9806.65 N*m (src/gunit/moment.gleam:20)",
+  "1 lbf*ft = 1.3558179483314004 N*m (src/gunit/moment.gleam:25)",
+  "1 kip*ft = 1355.8179483314004 N*m (src/gunit/moment.gleam:27)",
+]
+golden_tests = [
+  "kilonewton_meter_forward_test (test/gunit_test.gleam)",
+  "kilonewton_meter_inverse_test (test/gunit_test.gleam)",
+  "kilogram_force_meter_forward_test (test/gunit_test.gleam)",
+  "kilogram_force_meter_inverse_test (test/gunit_test.gleam)",
+  "tonne_force_meter_forward_test (test/gunit_test.gleam)",
+  "tonne_force_meter_inverse_test (test/gunit_test.gleam)",
+  "pound_foot_forward_test (test/gunit_test.gleam)",
+  "pound_foot_inverse_test (test/gunit_test.gleam)",
+  "kip_foot_forward_test (test/gunit_test.gleam)",
+  "kip_foot_inverse_test (test/gunit_test.gleam)",
+]
+provenance = "The module defines moment as force times length; its gravitational-metric factors derive from standard gravity, and its US-customary factors from the NIST SP 811 pound-force and the exact international yard-and-pound foot (src/gunit/moment.gleam:4, src/gunit/moment.gleam:14, src/gunit/moment.gleam:22)."
+
+# Edge cases
+# Zero and negative moments are accepted. A conversion round trip can incur ordinary Float
+# rounding and is not promised to reproduce a bit-identical Float.
+#
+# Assumption set
+# Each conversion is a linear scale with no offset. Noncanonical brands cross through
+# NewtonMeter, and arithmetic is available only after values share that canonical brand.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned brand.

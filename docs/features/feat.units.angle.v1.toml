@@ -1,0 +1,42 @@
+schema_version = 1
+id = "feat.units.angle.v1"
+name = "Angle brands and conversions"
+status = "completed"
+intensity = "calc"
+intent = "Prevents degree and radian mix-ups while providing explicit conversion and Radian-only arithmetic."
+consequence_of_change = "A silent brand, factor, or canonical-unit change can corrupt trigonometric inputs and every downstream calculation that consumes an angle."
+acceptance = [
+  "Radian and Degree remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Degree-to-Radian conversion multiplies by the cited factor, and Radian-to-Degree conversion divides by that same factor.",
+  "Add, subtract, and scale accept the canonical Radian brand and return Radian.",
+  "No operation implicitly coerces Degree to Radian.",
+]
+non_goals = [
+  "Evaluating trigonometric functions or normalizing angles to a revolution range.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+  "Providing arithmetic directly on Degree values.",
+]
+failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
+brands = [ "Radian", "Degree" ]
+units = "Brands are Radian, the canonical arithmetic unit, and Degree, an edge/display unit; each constructor stores the raw Float in the named brand."
+factors = [
+  "1 degree = 0.017453292519943295 radian (src/gunit/angle.gleam:14)",
+]
+golden_tests = [
+  "degree_forward_test (test/gunit_test.gleam)",
+  "degree_inverse_test (test/gunit_test.gleam)",
+]
+provenance = "The source defines the factor as the degree-to-radian scale derived from pi; it cites no external authority (src/gunit/angle.gleam:12)."
+
+# Edge cases
+# Zero and negative values are accepted. Construction preserves the supplied Float.
+# A conversion round trip can incur ordinary Float rounding and is not promised to be
+# bit-identical.
+#
+# Assumption set
+# Conversion is linear with no offset. Degree values cross to Radian by multiplication;
+# Radian values cross back by division. Callers must convert before canonical arithmetic.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned brand.

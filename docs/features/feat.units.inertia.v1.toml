@@ -1,0 +1,32 @@
+schema_version = 1
+id = "feat.units.inertia.v1"
+name = "Second moment of area brand"
+status = "completed"
+intensity = "light"
+intent = "Brands second moment of area in mm4 so section-property values cannot be passed as unrelated Floats."
+consequence_of_change = "Removing or repurposing Mm4 can let section inertia be confused with area, length, or another fourth-power convention and corrupt stiffness calculations."
+acceptance = [
+  "Mm4 remains an opaque single-unit brand with a direct constructor and raw-value extractor.",
+  "The constructor stores its supplied Float unchanged, and the extractor returns that raw Float.",
+  "Add, subtract, and scale accept Mm4 and return Mm4.",
+  "The module exposes no conversion to another second-moment unit.",
+]
+non_goals = [
+  "Providing cm4, in4, or other display-unit conversions.",
+  "Deriving second moment of area from geometry or distinguishing axis labels.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+]
+failure = "No explicit failure path exists: construction, extraction, and same-brand arithmetic return directly without validation, clamping, or normalization; Float behavior is inherited from the underlying operations."
+brands = [ "Mm4" ]
+
+# Edge cases
+# Zero and negative values are accepted, and scaling by any Float is allowed.
+#
+# Assumption set
+# There is nothing to convert because Mm4 is the only unit brand. Its whole value is
+# preventing a second-moment-of-area mix-up at a function signature; callers own axis
+# meaning and geometric validity.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned Mm4.

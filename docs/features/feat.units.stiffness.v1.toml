@@ -1,0 +1,32 @@
+schema_version = 1
+id = "feat.units.stiffness.v1"
+name = "Stiffness semantic brands"
+status = "completed"
+intensity = "light"
+intent = "Keeps translational and rotational spring stiffness values distinct at partial-fixity and other structural signatures."
+consequence_of_change = "Weakening or repurposing either brand can place a rotational stiffness in a translational degree of freedom, or the reverse, without a type error."
+acceptance = [
+  "KnPerM and KnMPerRad remain distinct opaque brands for unrelated physical dimensions.",
+  "Each constructor stores its supplied Float unchanged, and each matching extractor returns that raw Float.",
+  "The module exposes no conversion between translational and rotational stiffness.",
+  "The module exposes no arithmetic on either stiffness brand.",
+]
+non_goals = [
+  "Converting KnPerM to KnMPerRad or otherwise treating the dimensions as equivalent.",
+  "Providing alternate stiffness units, arithmetic, matrices, or degree-of-freedom mapping.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+]
+failure = "No explicit failure path exists: every constructor accepts the supplied Float without validation, and every extractor returns it unchanged; no range, finiteness, or physical-plausibility check occurs."
+brands = [ "KnPerM", "KnMPerRad" ]
+
+# Edge cases
+# Zero and negative stiffness values are accepted. The brands do not enforce release,
+# support, or stability semantics.
+#
+# Assumption set
+# There is nothing to convert because the brands have different dimensions. Their whole
+# value is preventing a translational-versus-rotational mix-up at a function signature.
+#
+# Exact failure semantics
+# Construction and extraction return directly. There is no Result-returning branch,
+# explicit panic path, clamping, normalization, conversion, or arithmetic operation.

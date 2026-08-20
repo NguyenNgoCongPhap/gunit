@@ -1,0 +1,41 @@
+schema_version = 1
+id = "feat.units.time.v1"
+name = "Time brands and conversions"
+status = "completed"
+intensity = "calc"
+intent = "Separates second and millisecond durations while providing explicit conversion and Second-only arithmetic."
+consequence_of_change = "A silent factor, brand, or canonical-unit change can rescale durations and corrupt dynamic, integration, timeout, or sampling calculations."
+acceptance = [
+  "Second and Millisecond remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Millisecond-to-Second conversion multiplies by the cited factor, and Second-to-Millisecond conversion divides by that same factor.",
+  "Add, subtract, and scale accept the canonical Second brand and return Second.",
+  "No operation implicitly coerces Millisecond to Second.",
+]
+non_goals = [
+  "Providing clocks, dates, calendars, scheduling, or timeout side effects.",
+  "Validating sign, magnitude, finiteness, or physical plausibility.",
+  "Providing arithmetic directly on Millisecond values or converting frequency to period.",
+]
+failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
+brands = [ "Second", "Millisecond" ]
+units = "Brands are Second, the canonical arithmetic unit, and Millisecond, an edge/display unit; each constructor stores the raw Float in the named brand."
+factors = [
+  "1 millisecond = 0.001 second (src/gunit/time.gleam:14)",
+]
+golden_tests = [
+  "millisecond_forward_test (test/gunit_test.gleam)",
+  "millisecond_inverse_test (test/gunit_test.gleam)",
+]
+provenance = "The factor is the module's millisecond-to-second definition; the source cites no external authority (src/gunit/time.gleam:12)."
+
+# Edge cases
+# Zero and negative durations are accepted. A conversion round trip can incur ordinary
+# Float rounding and is not promised to reproduce a bit-identical Float.
+#
+# Assumption set
+# Conversion is linear with no offset. Millisecond values cross to Second by
+# multiplication and cross back by division; arithmetic exists only for Second.
+#
+# Exact failure semantics
+# The API exposes no Result-returning branch or explicit panic path. Inputs are neither
+# rejected nor repaired, so any exceptional Float behavior flows into the returned brand.
