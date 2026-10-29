@@ -1,7 +1,7 @@
 # gunit agent contract
 
 - Do read README.md before editing this library.
-- Do use `docs/features/*.toml` as the capability catalog; calc intensity is light.
+- Do use `docs/features/*.toml` as the capability catalog; calc intensity is mixed: conversions are calc and brand-only contracts are light.
 
 <!-- shared:library-family:begin (generated from repo-seed shared/agents/library-family.md; do not edit) -->
 ## Shared library-family rules
