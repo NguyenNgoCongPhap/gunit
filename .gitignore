@@ -25,8 +25,7 @@ Thumbs.db
 *.pem
 *.key
 
-# Agent rule files — local only, never publish
-AGENTS.md
+# Tool-local state; the owner-approved AGENTS.md is versioned.
 CLAUDE.md
 .claude/
 .codex/
