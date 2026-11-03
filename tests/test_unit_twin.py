@@ -130,6 +130,23 @@ class TwinControls(unittest.TestCase):
         ):
             twin.write_contract_facts(self.root, self.source)
 
+    def published_producer(
+        self, number: int, document: dict[str, Any], metadata_path: str
+    ) -> Path:
+        """Build a real producer commit for one unsupported metadata schema control."""
+        producer = self.root / f"producer-{number}"
+        for item in self.source["artifacts"]:
+            path = producer / item["source"]
+            path.parent.mkdir(parents=True, exist_ok=True)
+            data = (
+                json.dumps(document).encode()
+                if item["destination"] == metadata_path
+                else (ROOT / item["destination"]).read_bytes()
+            )
+            path.write_bytes(data)
+        commit_control(producer)
+        return producer
+
     def test_published_metadata_schema_refuses_before_any_output_write(self) -> None:
         metadata_path = next(
             item["destination"]
@@ -150,17 +167,7 @@ class TwinControls(unittest.TestCase):
         original_run = twin.run
         for number, document in enumerate(invalid):
             with self.subTest(schema=document.get("schema_version", "absent")):
-                producer = self.root / f"producer-{number}"
-                for item in self.source["artifacts"]:
-                    path = producer / item["source"]
-                    path.parent.mkdir(parents=True, exist_ok=True)
-                    data = (
-                        json.dumps(document).encode()
-                        if item["destination"] == metadata_path
-                        else (ROOT / item["destination"]).read_bytes()
-                    )
-                    path.write_bytes(data)
-                commit_control(producer)
+                producer = self.published_producer(number, document, metadata_path)
 
                 def transport(
                     command: list[str],
