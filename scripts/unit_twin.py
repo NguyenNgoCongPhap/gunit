@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import re
+import tempfile
 import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
@@ -238,17 +239,49 @@ def generate(root: Path, *, write: bool) -> str:
         ],
     }
     if write:
-        for item, data, _ in outputs:
-            destination = repository_path(root, item["destination"])
-            destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_bytes(data)
-        repository_path(root, LOCK).write_text(
-            json.dumps(document, indent=2) + "\n", encoding="utf-8", newline="\n"
-        )
-        write_contract_facts(root, source)
+        prepared = prepare_outputs(root, source, outputs, document)
+        if remote_head(root, source) != head:
+            raise ValueError("unit-twin producer moved during preparation")
+        write_outputs(root, prepared)
     if verify_local(root, source) != document:
         raise ValueError("unit-twin lock differs from published producer provenance")
     return head
+
+
+def write_outputs(root: Path, outputs: dict[str, bytes]) -> None:
+    """Validate every destination before writing the already prepared output bytes."""
+    destinations = {repository_path(root, name): data for name, data in outputs.items()}
+    for path, data in destinations.items():
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(data)
+
+
+def prepare_outputs(
+    root: Path,
+    source: dict[str, Any],
+    outputs: list[tuple[dict[str, Any], bytes, str]],
+    document: dict[str, Any],
+) -> dict[str, bytes]:
+    """Validate fetched relationships and derive every output without replacing consumer files."""
+    scratch = repository_path(root, "_scratch/prepared-twin")
+    scratch.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(dir=scratch) as directory:
+        staged = Path(directory)
+        candidate = {item["destination"]: data for item, data, _ in outputs}
+        candidate[LOCK] = (json.dumps(document, indent=2) + "\n").encode("utf-8")
+        names = [
+            *candidate,
+            source["contract"],
+            str(PurePosixPath(source["contract"]).with_name("index.md")),
+        ]
+        for path in repository_path(root, source["contract"]).parent.glob("*.toml"):
+            name = path.relative_to(root).as_posix()
+            candidate[name] = repository_path(root, name).read_bytes()
+        write_outputs(staged, candidate)
+        write_contract_facts(staged, source)
+        if verify_local(staged, source) != document:
+            raise ValueError("prepared unit-twin provenance differs")
+        return {name: repository_path(staged, name).read_bytes() for name in names}
 
 
 def main() -> int:

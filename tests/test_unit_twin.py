@@ -11,6 +11,7 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from functools import partial
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -130,9 +131,7 @@ class TwinControls(unittest.TestCase):
         ):
             twin.write_contract_facts(self.root, self.source)
 
-    def published_producer(
-        self, number: int, document: dict[str, Any], metadata_path: str
-    ) -> Path:
+    def published_producer(self, number: int, document: dict[str, Any], metadata_path: str) -> Path:
         """Build a real producer commit for one unsupported metadata schema control."""
         producer = self.root / f"producer-{number}"
         for item in self.source["artifacts"]:
@@ -146,6 +145,13 @@ class TwinControls(unittest.TestCase):
             path.write_bytes(data)
         commit_control(producer)
         return producer
+
+    def producer_transport(
+        self, producer: Path, command: list[str], *, root: Path = ROOT, network: bool = False
+    ) -> str:
+        """Redirect only transport while retaining actual Git objects and commands."""
+        redirected = [str(producer) if arg == self.source["repository"] else arg for arg in command]
+        return run(redirected, root=root, network=network)
 
     def test_published_metadata_schema_refuses_before_any_output_write(self) -> None:
         metadata_path = next(
@@ -164,31 +170,55 @@ class TwinControls(unittest.TestCase):
             "docs/features/index.md",
             *[item["destination"] for item in self.source["artifacts"]],
         ]
-        original_run = twin.run
         for number, document in enumerate(invalid):
             with self.subTest(schema=document.get("schema_version", "absent")):
                 producer = self.published_producer(number, document, metadata_path)
 
-                def transport(
-                    command: list[str],
-                    *,
-                    root: Path = ROOT,
-                    network: bool = False,
-                    producer_path: Path = producer,
-                ) -> str:
-                    redirected = [
-                        str(producer_path) if arg == self.source["repository"] else arg
-                        for arg in command
-                    ]
-                    return original_run(redirected, root=root, network=network)
-
                 before = {name: (self.root / name).read_bytes() for name in paths}
                 with (
-                    patch.object(twin, "run", side_effect=transport),
+                    patch.object(
+                        twin, "run", side_effect=partial(self.producer_transport, producer)
+                    ),
                     self.assertRaisesRegex(ValueError, "metadata schema"),
                 ):
                     twin.generate(self.root, write=True)
                 self.assertEqual({name: (self.root / name).read_bytes() for name in paths}, before)
+
+    def test_inconsistent_published_factors_refuse_without_replacing_outputs(self) -> None:
+        metadata_path = next(
+            item["destination"]
+            for item in self.source["artifacts"]
+            if item["destination"].endswith(".json")
+        )
+        document = json.loads((ROOT / metadata_path).read_bytes())
+        document["scales"][1]["bytes_per_unit"] = 1023.0
+        producer = self.published_producer(0, document, metadata_path)
+        paths = [
+            twin.LOCK,
+            self.source["contract"],
+            "docs/features/index.md",
+            *[item["destination"] for item in self.source["artifacts"]],
+        ]
+        before = {name: (self.root / name).read_bytes() for name in paths}
+        with (
+            patch.object(twin, "run", side_effect=partial(self.producer_transport, producer)),
+            self.assertRaisesRegex(ValueError, "source factor differs"),
+        ):
+            twin.generate(self.root, write=True)
+        self.assertEqual({name: (self.root / name).read_bytes() for name in paths}, before)
+
+    def test_valid_published_plan_is_prepared_then_read_back(self) -> None:
+        metadata_path = next(
+            item["destination"]
+            for item in self.source["artifacts"]
+            if item["destination"].endswith(".json")
+        )
+        document = json.loads((ROOT / metadata_path).read_bytes())
+        producer = self.published_producer(0, document, metadata_path)
+        expected = run(["git", "rev-parse", "HEAD"], root=producer).strip()
+        with patch.object(twin, "run", side_effect=partial(self.producer_transport, producer)):
+            self.assertEqual(twin.generate(self.root, write=True), expected)
+        self.assertEqual(twin.verify_local(self.root, self.source)["commit"], expected)
 
 
 class ProcessControls(unittest.TestCase):
