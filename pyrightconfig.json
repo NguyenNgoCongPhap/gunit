@@ -1,0 +1,28 @@
+{
+  "pythonVersion": "3.13",
+  "typeCheckingMode": "strict",
+  "include": ["."],
+  "extraPaths": ["scripts"],
+  "exclude": [
+    "**/__pycache__",
+    "**/.venv",
+    "**/node_modules",
+    "**/.git",
+    "build",
+    "dist",
+    "target",
+    "_scratch"
+  ],
+  "reportMissingTypeStubs": "warning",
+  "executionEnvironments": [
+    {
+      "root": "scripts",
+      "reportUnknownMemberType": "none",
+      "reportUnknownVariableType": "none",
+      "reportUnknownArgumentType": "none",
+      "reportUnknownParameterType": "none",
+      "reportUnknownLambdaType": "none",
+      "reportMissingTypeArgument": "none"
+    }
+  ]
+}

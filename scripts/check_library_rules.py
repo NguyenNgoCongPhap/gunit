@@ -4,9 +4,10 @@
 """Check library instructions against the reviewed REPO_SEED checkout."""
 
 import os
-import subprocess
 import sys
 from pathlib import Path
+
+from process_tools import GateToolError, display, run
 
 
 # reason: this gate adapter delegates policy to its owner rather than copying it.
@@ -30,13 +31,9 @@ def main() -> int:
         "--check",
     ]
     try:
-        subprocess.run(arguments, check=True)
-    except subprocess.CalledProcessError as failure:
-        return failure.returncode
-    except OSError:
-        print(
-            "REFUSED: cannot execute the shared library-rules checker", file=sys.stderr
-        )
+        display(run(arguments))
+    except GateToolError as failure:
+        print(failure, file=sys.stderr)
         return 2
     return 0
 

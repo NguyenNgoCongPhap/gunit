@@ -10,8 +10,10 @@
 //// code fails right here.
 
 // SPDX-License-Identifier: MIT
-// Copyright (c) 2026 Cong Phap <tinhza2000@gmail.com>
+// Copyright (c) 2026 Cong Phap <phapnnc@daidung.vn>
 
+import gleam/dynamic
+import gleam/dynamic/decode
 import gleam/float
 import gleeunit
 import gleeunit/should
@@ -22,6 +24,7 @@ import gunit/dimensionless
 import gunit/force
 import gunit/frequency
 import gunit/inertia
+import gunit/information_size
 import gunit/length
 import gunit/mass
 import gunit/moment
@@ -31,6 +34,85 @@ import gunit/time
 
 pub fn main() {
   gleeunit.main()
+}
+
+pub fn information_size_byte_base_test() {
+  let assert Ok(quantity) = information_size.bytes(0.25)
+  quantity |> information_size.value |> should.equal(0.25)
+  let assert Ok(converted) = information_size.from_bytes(0.25)
+  converted |> information_size.to_bytes |> should.equal(0.25)
+}
+
+pub fn information_size_binary_forward_test() {
+  let assert Ok(kibibyte) = information_size.from_kibibytes(1.0)
+  kibibyte |> information_size.to_bytes |> should.equal(1024.0)
+  let assert Ok(mebibyte) = information_size.from_mebibytes(1.0)
+  mebibyte |> information_size.to_bytes |> should.equal(1_048_576.0)
+  let assert Ok(gibibyte) = information_size.from_gibibytes(1.0)
+  gibibyte |> information_size.to_bytes |> should.equal(1_073_741_824.0)
+  let assert Ok(tebibyte) = information_size.from_tebibytes(1.0)
+  tebibyte |> information_size.to_bytes |> should.equal(1_099_511_627_776.0)
+}
+
+pub fn information_size_binary_inverse_test() {
+  let assert Ok(quantity) = information_size.from_bytes(1_099_511_627_776.0)
+  quantity |> information_size.to_kibibytes |> should.equal(1_073_741_824.0)
+  quantity |> information_size.to_mebibytes |> should.equal(1_048_576.0)
+  quantity |> information_size.to_gibibytes |> should.equal(1024.0)
+  quantity |> information_size.to_tebibytes |> should.equal(1.0)
+}
+
+pub fn information_size_fractional_roundtrip_test() {
+  let assert Ok(quantity) = information_size.from_kibibytes(0.5)
+  quantity |> information_size.value |> should.equal(512.0)
+  quantity |> information_size.to_kibibytes |> should.equal(0.5)
+}
+
+pub fn information_size_zero_test() {
+  let assert Ok(quantity) = information_size.bytes(0.0)
+  quantity |> information_size.to_bytes |> should.equal(0.0)
+  quantity |> information_size.to_tebibytes |> should.equal(0.0)
+}
+
+pub fn information_size_negative_test() {
+  information_size.bytes(-1.0) |> should.equal(Error(information_size.Negative))
+  information_size.from_bytes(-1.0)
+  |> should.equal(Error(information_size.Negative))
+  information_size.from_kibibytes(-1.0)
+  |> should.equal(Error(information_size.Negative))
+  information_size.from_mebibytes(-1.0)
+  |> should.equal(Error(information_size.Negative))
+  information_size.from_gibibytes(-1.0)
+  |> should.equal(Error(information_size.Negative))
+  information_size.from_tebibytes(-1.0)
+  |> should.equal(Error(information_size.Negative))
+}
+
+pub fn information_size_overflow_test() {
+  let maximum = 1.7976931348623157e308
+  information_size.from_kibibytes(maximum)
+  |> should.equal(Error(information_size.NonFinite))
+  information_size.from_mebibytes(maximum)
+  |> should.equal(Error(information_size.NonFinite))
+  information_size.from_gibibytes(maximum)
+  |> should.equal(Error(information_size.NonFinite))
+  information_size.from_tebibytes(maximum)
+  |> should.equal(Error(information_size.NonFinite))
+  information_size.from_kibibytes(-1.7976931348623157e308)
+  |> should.equal(Error(information_size.Negative))
+  let assert Ok(quantity) = information_size.from_bytes(maximum)
+  quantity |> information_size.to_bytes |> should.equal(maximum)
+}
+
+pub fn information_size_decoder_test() {
+  let assert Ok(quantity) =
+    decode.run(dynamic.float(512.0), information_size.decoder())
+  quantity |> information_size.value |> should.equal(512.0)
+  let assert Error(_) =
+    decode.run(dynamic.float(-1.0), information_size.decoder())
+  let assert Error(_) =
+    decode.run(dynamic.string("512"), information_size.decoder())
+  Nil
 }
 
 /// True when two floats agree within a tight relative tolerance.

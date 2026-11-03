@@ -4,16 +4,22 @@
 """Run the shared instruction preflight and this repository's established gate."""
 
 import argparse
-import subprocess
+import sys
 from pathlib import Path
 
 from check_library_rules import main as check_library_rules
+from process_tools import GateToolError, display, run
 
 ROOT = Path(__file__).resolve().parents[1]
 COMMANDS = [
+    [sys.executable, "scripts/unit_twin.py", "--check"],
     ["gleam", "test"],
     ["gleam", "format", "--check", "src", "test"],
-    ["py", "-3.14", "scripts/verify_catalog.py"],
+    [sys.executable, "scripts/verify_catalog.py"],
+    ["uvx", "--offline", "ruff@0.15.18", "check", "."],
+    ["uvx", "--offline", "ruff@0.15.18", "format", "--check", "."],
+    ["uvx", "--offline", "pyright@1.1.410", "--project", "."],
+    [sys.executable, "-m", "unittest", "discover", "-s", "tests"],
 ]
 
 
@@ -32,12 +38,10 @@ def main() -> int:
     for command in COMMANDS:
         print("RUN " + " ".join(command), flush=True)
         try:
-            subprocess.run(command, cwd=ROOT, check=True)
-        except subprocess.CalledProcessError as failure:
-            return failure.returncode
-        except OSError:
-            print("REFUSED: gate command unavailable: " + command[0])
-            return 2
+            display(run(command))
+        except GateToolError as failure:
+            print(failure)
+            return 1
     return 0
 
 

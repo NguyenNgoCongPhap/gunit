@@ -28,6 +28,8 @@ from __future__ import annotations
 import re
 import sys
 import tomllib
+from collections import Counter
+from dataclasses import dataclass, field
 from pathlib import Path
 
 REPO = Path(__file__).resolve().parent.parent
@@ -35,12 +37,30 @@ CITATION = re.compile(r"\(?(src/gunit/[a-z_0-9]+\.gleam):(\d+)\)?")
 OPAQUE = re.compile(r"^pub opaque type (\w+)", re.M)
 TEST_FN = re.compile(r"^pub fn (\w+_test)\s*\(", re.M)
 FACTOR_CONST = re.compile(r"^const (\w+_factor) = ([0-9_.eE+-]+)", re.M)
+GENERATED_CONSTRUCTOR = re.compile(r"^pub fn from_(\w+)\(")
+GENERATED_FACTOR = re.compile(r"\s*case input >\. maximum_float /\. ([0-9_.eE+-]+) \{")
 ENTRY_ID = re.compile(r"^feat\.units\.([a-z_0-9]+)\.v\d+$")
 REQUIRED = ("schema_version", "id", "status", "intensity", "intent", "acceptance", "brands")
 CALC_REQUIRED = ("units", "factors", "golden_tests", "provenance")
 STATUSES = {"pending", "in-progress", "completed", "deprecated", "superseded"}
 # A retired ID is never reused or deleted, so it outlives the module it described.
 RETIRED = {"deprecated", "superseded"}
+
+
+def source_factors(lines: list[str], module: str) -> dict[int, tuple[str, str]]:
+    """Map source lines to (factor identity, literal), including Rust-emitted guards."""
+    generated = any("Generated from Rust unit declarations. Do not edit." in line for line in lines)
+    constructor = ""
+    factors: dict[int, tuple[str, str]] = {}
+    for number, line in enumerate(lines, 1):
+        if constant := FACTOR_CONST.match(line):
+            factors[number] = constant.group(1), constant.group(2)
+        elif generated and (name := GENERATED_CONSTRUCTOR.match(line)):
+            constructor = name.group(1)
+        elif generated and constructor and (factor := GENERATED_FACTOR.fullmatch(line)):
+            factors[number] = f"{module}.{constructor}_factor", factor.group(1)
+            constructor = ""
+    return factors
 
 
 def normalize(value: str) -> str:
@@ -62,130 +82,165 @@ def claims_value(claim: str, value: str) -> bool:
     return False
 
 
-def main() -> int:
-    cat_dir = REPO / "docs" / "features"
-    if not cat_dir.is_dir():
-        print(f"FAIL {cat_dir} does not exist", file=sys.stderr)
-        return 1
+@dataclass
+class SourceInventory:
+    """Paths and one-based lines map to factor identities and exact source literals."""
 
-    src_lines: dict[str, list[str]] = {}
-    brands: set[str] = set()
-    # (file, line) -> (const name, literal value). Keyed by position so a citation must
-    # land ON the constant it claims, and named so coverage is by IDENTITY. Counting
-    # claims against counting constants let one factor be documented twice while another
-    # was silently dropped: the totals still matched.
-    factor_at: dict[tuple[str, int], tuple[str, str]] = {}
-    families: set[str] = set()
-    for path in sorted((REPO / "src" / "gunit").glob("*.gleam")):
+    lines: dict[str, list[str]] = field(default_factory=dict)
+    brands: set[str] = field(default_factory=set)
+    families: set[str] = field(default_factory=set)
+    factors: dict[tuple[str, int], tuple[str, str]] = field(default_factory=dict)
+    tests: set[str] = field(default_factory=set)
+
+
+@dataclass
+class Claims:
+    brands: set[str] = field(default_factory=set)
+    families: set[str] = field(default_factory=set)
+    factors: Counter[str] = field(default_factory=Counter)
+    documented: int = 0
+    resolved: int = 0
+
+
+def source_inventory() -> SourceInventory:
+    """Read real module brands, factor definitions and golden test names."""
+    inventory = SourceInventory()
+    for path in sorted((REPO / "src/gunit").glob("*.gleam")):
         text = path.read_text(encoding="utf-8")
-        rel = f"src/gunit/{path.name}"
-        families.add(path.stem)
-        src_lines[rel] = text.splitlines()
-        brands |= set(OPAQUE.findall(text))
-        for n, line in enumerate(src_lines[rel], 1):
-            if m := FACTOR_CONST.match(line):
-                factor_at[(rel, n)] = (m.group(1), m.group(2))
+        relative = f"src/gunit/{path.name}"
+        inventory.lines[relative] = text.splitlines()
+        inventory.families.add(path.stem)
+        inventory.brands.update(OPAQUE.findall(text))
+        inventory.factors.update(
+            {
+                (relative, number): factor
+                for number, factor in source_factors(inventory.lines[relative], path.stem).items()
+            }
+        )
+    test_path = REPO / "test/gunit_test.gleam"
+    if test_path.exists():
+        inventory.tests.update(TEST_FN.findall(test_path.read_text(encoding="utf-8")))
+    return inventory
 
-    test_path = REPO / "test" / "gunit_test.gleam"
-    tests = set(TEST_FN.findall(test_path.read_text(encoding="utf-8"))) if test_path.exists() else set()
 
-    entries = sorted(cat_dir.glob("*.toml"))
-    print(f"{len(entries)} entries | source: {len(brands)} brands, {len(factor_at)} factor consts, {len(tests)} tests\n")
+def factor_problem(claim: str, inventory: SourceInventory, claims: Claims) -> str:
+    """Check one exact source-number citation and count coverage by factor identity."""
+    claims.documented += 1
+    citation = CITATION.search(claim)
+    if citation is None:
+        return f"factor has no file:line citation: {claim[:60]}"
+    relative, number = citation.group(1), int(citation.group(2))
+    if relative not in inventory.lines:
+        return f"citation names a missing file: {relative}"
+    if not 1 <= number <= len(inventory.lines[relative]):
+        return f"citation {relative}:{number} is past end of file"
+    if (relative, number) not in inventory.factors:
+        return f"{relative}:{number} is not a factor definition"
+    name, value = inventory.factors[(relative, number)]
+    claims.factors[name] += 1
+    if not claims_value(claim, value):
+        return f"{name} is {value}, which the claim does not state: {claim[:70]}"
+    claims.resolved += 1
+    return ""
 
-    ok = True
-    claimed: set[str] = set()
-    described: set[str] = set()
-    covered: dict[str, int] = {}
-    documented = resolved = 0
 
+def entry_problems(
+    path: Path, entry: dict, inventory: SourceInventory, claims: Claims
+) -> list[str]:
+    """Keep every label bound to its actual module, brands, factors and named tests."""
+    problems = [f"missing required field {name}" for name in REQUIRED if name not in entry]
+    status = entry.get("status")
+    if status not in STATUSES:
+        problems.append(f"status {status!r} is not one of {sorted(STATUSES)}")
+    if entry.get("id") != path.stem:
+        problems.append(f"id {entry.get('id')!r} does not match filename {path.stem!r}")
+    family = ENTRY_ID.fullmatch(path.stem)
+    if family is None:
+        problems.append(f"filename {path.stem!r} names no family module")
+    else:
+        claims.families.add(family.group(1))
+        if family.group(1) not in inventory.families and status not in RETIRED:
+            problems.append(f"entry describes missing src/gunit/{family.group(1)}.gleam")
+    if entry.get("intensity") == "calc":
+        problems.extend(
+            f"intensity=calc but {name} is missing or empty"
+            for name in CALC_REQUIRED
+            if not entry.get(name)
+        )
+    claims.brands.update(entry.get("brands", []))
+    problems.extend(
+        f"brand {name} exists in no module"
+        for name in entry.get("brands", [])
+        if name not in inventory.brands
+    )
+    for claim in entry.get("factors", []):
+        problem = factor_problem(claim, inventory, claims)
+        if problem:
+            problems.append(problem)
+    for cited in entry.get("golden_tests", []):
+        name = cited.split()[0].split("(")[0].strip()
+        if name and name not in inventory.tests:
+            problems.append(f"cited test does not exist: {name}")
+    return problems
+
+
+def coverage_problems(inventory: SourceInventory, claims: Claims) -> list[str]:
+    """Require every current module, brand and factor exactly once where applicable."""
+    problems = []
+    if missing := sorted(inventory.brands - claims.brands):
+        problems.append(f"brands have no entry: {missing}")
+    if missing := sorted(inventory.families - claims.families):
+        problems.append(f"modules have no catalog entry: {missing}")
+    for name, _ in sorted(inventory.factors.values()):
+        seen = claims.factors[name]
+        if seen == 0:
+            problems.append(f"{name} is defined in source and documented nowhere")
+        elif seen > 1:
+            problems.append(f"{name} is documented {seen} times; each factor is claimed once")
+    return problems
+
+
+def check_catalog() -> int:
+    """Check every entry and aggregate real source coverage without inferring factor direction."""
+    directory = REPO / "docs/features"
+    if not directory.is_dir():
+        raise ValueError("catalog directory does not exist")
+    inventory, claims = source_inventory(), Claims()
+    entries = sorted(directory.glob("*.toml"))
+    print(
+        f"{len(entries)} entries | source: {len(inventory.brands)} brands, "
+        f"{len(inventory.factors)} factor definitions, {len(inventory.tests)} tests"
+    )
+    problems = []
     for path in entries:
-        problems: list[str] = []
         try:
             entry = tomllib.loads(path.read_text(encoding="utf-8"))
-        except tomllib.TOMLDecodeError as exc:
-            print(f"  FAIL {path.name}: does not parse - {exc}")
-            ok = False
-            continue
-
-        problems += [f"missing required field {f}" for f in REQUIRED if f not in entry]
-        if (status := entry.get("status")) not in STATUSES:
-            problems.append(f"status {status!r} is not one of {sorted(STATUSES)}")
-        if entry.get("id") != path.stem:
-            problems.append(f"id {entry.get('id')!r} does not match filename {path.stem!r}")
-        if m := ENTRY_ID.fullmatch(path.stem):
-            described.add(m.group(1))
-            if m.group(1) not in families and status not in RETIRED:
-                problems.append(f"entry describes src/gunit/{m.group(1)}.gleam, which does not exist")
+            found = entry_problems(path, entry, inventory, claims)
+        except (ValueError, TypeError, KeyError, AttributeError) as error:
+            found = [f"entry refused: {error}"]
+        if found:
+            problems.extend(f"{path.name}: {problem}" for problem in found)
         else:
-            problems.append(f"filename {path.stem!r} is not feat.units.<family>.vN, so it names no module")
-        if entry.get("intensity") == "calc":
-            problems += [f"intensity=calc but {f} is missing or empty" for f in CALC_REQUIRED if not entry.get(f)]
-
-        claimed |= set(entry.get("brands", []))
-        problems += [f"brand {b} exists in no module" for b in entry.get("brands", []) if b not in brands]
-
-        for claim in entry.get("factors", []):
-            documented += 1
-            m = CITATION.search(claim)
-            if not m:
-                problems.append(f"factor has no file:line citation: {claim[:60]}")
-                continue
-            rel, lineno = m.group(1), int(m.group(2))
-            if rel not in src_lines:
-                problems.append(f"citation names a missing file: {rel}")
-                continue
-            if not 1 <= lineno <= len(src_lines[rel]):
-                problems.append(f"citation {rel}:{lineno} is past end of file")
-                continue
-            if (rel, lineno) not in factor_at:
-                problems.append(
-                    f"{rel}:{lineno} is not a factor constant - line is: "
-                    f"{src_lines[rel][lineno - 1].strip()[:70]}"
-                )
-                continue
-            const_name, value = factor_at[(rel, lineno)]
-            covered[const_name] = covered.get(const_name, 0) + 1
-            if not claims_value(claim, value):
-                problems.append(f"{const_name} is {value}, which the claim does not state: {claim[:70]}")
-            else:
-                resolved += 1
-
-        for cited in entry.get("golden_tests", []):
-            name = cited.split()[0].split("(")[0].strip()
-            if name and name not in tests:
-                problems.append(f"cited test does not exist: {name}")
-
-        if problems:
-            ok = False
-            print(f"  FAIL {path.name}")
-            for p in problems:
-                print(f"        {p}")
-        else:
-            print(f"  ok   {path.name}  ({entry.get('intensity')}, {len(entry.get('factors', []))} factors)")
-
-    if uncovered := sorted(brands - claimed):
-        print(f"\n  FAIL {len(uncovered)} brands have no entry: {uncovered}")
-        ok = False
-
-    if unlabelled := sorted(families - described):
-        print(f"\n  FAIL {len(unlabelled)} modules have no catalog entry: {unlabelled}")
-        ok = False
-
-    # Coverage is per-constant, not a total. Comparing totals let one factor be claimed
-    # twice while another was dropped, because 25 still equalled 25.
-    for const_name, _ in sorted(factor_at.values()):
-        seen = covered.get(const_name, 0)
-        if seen == 0:
-            print(f"\n  FAIL {const_name} is defined in source and documented nowhere")
-            ok = False
-        elif seen > 1:
-            print(f"\n  FAIL {const_name} is documented {seen} times; each factor is claimed once")
-            ok = False
-
-    print(f"\nfactor claims: {documented} documented, {resolved} matched the cited constant's exact value")
+            print(f"  ok   {path.name}")
+    problems.extend(coverage_problems(inventory, claims))
+    for problem in problems:
+        print("FAIL " + problem)
+    print(
+        f"factor claims: {claims.documented} documented, "
+        f"{claims.resolved} matched the cited definition's exact value"
+    )
     print("Direction is NOT machine-checked: a claim that reverses unit and base still passes.")
-    print("PASS" if ok else "FAILED")
-    return 0 if ok else 1
+    print("FAILED" if problems else "PASS")
+    return 1 if problems else 0
+
+
+def main() -> int:
+    """Return a clear refusal for unreadable or invalid catalog/source inputs."""
+    try:
+        return check_catalog()
+    except (OSError, ValueError, TypeError) as error:
+        print(f"FAIL catalog inputs refused: {error}", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

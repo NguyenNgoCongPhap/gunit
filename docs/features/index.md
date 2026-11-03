@@ -1,6 +1,6 @@
 # gunit feature catalog
 
-This is a hand-written, curated index. It is not generated.
+Generated from source-verified feature contracts by scripts/unit_twin.py; do not edit.
 
 | ID | Name | Status | Intensity | Intent |
 | --- | --- | --- | --- | --- |
@@ -11,9 +11,10 @@ This is a hand-written, curated index. It is not generated.
 | [feat.units.force.v1](feat.units.force.v1.toml) | Force brands and conversions | completed | calc | Separates SI, gravitational-metric, and US-customary force values while routing explicit conversion and arithmetic through Newton. |
 | [feat.units.frequency.v1](feat.units.frequency.v1.toml) | Frequency brand | completed | light | Brands modal-analysis frequency values as Hz so they cannot be silently confused with unlabelled or time-domain Floats. |
 | [feat.units.inertia.v1](feat.units.inertia.v1.toml) | Second moment of area brand | completed | light | Brands second moment of area in mm4 so section-property values cannot be passed as unrelated Floats. |
+| [feat.units.information_size.v1](feat.units.information_size.v1.toml) | Generated checked information-size quantities | completed | calc | Expose the Rust-owned byte quantity and binary conversions as a pure generated Gleam twin, without a second factor table or unchecked decoder. |
 | [feat.units.length.v1](feat.units.length.v1.toml) | Length brands and conversions | completed | calc | Separates metric and US-customary lengths while routing explicit conversion and arithmetic through Meter. |
 | [feat.units.mass.v1](feat.units.mass.v1.toml) | Mass brands and conversions | completed | calc | Separates gram, kilogram, and metric-tonne mass values while routing explicit conversion and arithmetic through Kilogram. |
-| [feat.units.moment.v1](feat.units.moment.v1.toml) | Moment brands and conversions | completed | calc | Separates supported bending-moment representations while routing explicit conversion and arithmetic through NewtonMeter. |
+| [feat.units.moment.v1](feat.units.moment.v1.toml) | Moment brands and conversions | completed | calc | Separates SI, gravitational-metric, and US-customary bending-moment representations while routing explicit conversion and arithmetic through NewtonMeter. |
 | [feat.units.pressure.v1](feat.units.pressure.v1.toml) | Pressure and stress brands and conversions | completed | calc | Separates Pascal-based and kilogram-force-per-square-centimeter values while routing explicit conversion and arithmetic through Pascal. |
 | [feat.units.stiffness.v1](feat.units.stiffness.v1.toml) | Stiffness semantic brands | completed | light | Keeps translational and rotational spring stiffness values distinct at partial-fixity and other structural signatures. |
 | [feat.units.time.v1](feat.units.time.v1.toml) | Time brands and conversions | completed | calc | Separates second and millisecond durations while providing explicit conversion and Second-only arithmetic. |

@@ -1,3 +1,3 @@
 # Devlog index
 
-next_free_number = 3
+next_free_number = 4

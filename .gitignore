@@ -33,3 +33,4 @@ CLAUDE.md
 
 # Local gate bytecode and editor state.
 .serena/
+_scratch/

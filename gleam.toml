@@ -10,7 +10,7 @@ description = "Compile-time unit-label safety for engineering values in Gleam: S
 repository = { type = "github", user = "NguyenNgoCongPhap", repo = "gunit" }
 
 [dependencies]
-gleam_stdlib = ">= 0.44.0 and < 2.0.0"
+gleam_stdlib = "1.0.3"
 
 [dev-dependencies]
-gleeunit = ">= 1.0.0 and < 2.0.0"
+gleeunit = "1.11.0"
