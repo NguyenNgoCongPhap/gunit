@@ -5,6 +5,7 @@
 import argparse
 import hashlib
 import json
+import math
 import re
 import tempfile
 import tomllib
@@ -142,6 +143,9 @@ def factor_claims(root: Path, source: dict[str, Any]) -> list[str]:
         raise ValueError("unit-twin source and metadata scale sets differ")
     claims = []
     for scale in metadata["scales"]:
+        factor = scale["bytes_per_unit"]
+        if type(factor) not in {int, float} or not math.isfinite(factor) or factor <= 0:
+            raise ValueError("unit-twin factor must be a positive finite JSON number")
         name = f"{Path(module).stem}.{scale['name']}_factor"
         found = [(line, value) for line, (label, value) in factors.items() if label == name]
         if len(found) != 1 or float(found[0][1].replace("_", "")) != scale["bytes_per_unit"]:

@@ -220,6 +220,36 @@ class TwinControls(unittest.TestCase):
             self.assertEqual(twin.generate(self.root, write=True), expected)
         self.assertEqual(twin.verify_local(self.root, self.source)["commit"], expected)
 
+    def test_boolean_factor_refuses_without_replacing_outputs(self) -> None:
+        metadata_path = next(
+            item["destination"]
+            for item in self.source["artifacts"]
+            if item["destination"].endswith(".json")
+        )
+        document = json.loads((ROOT / metadata_path).read_bytes())
+        invalid: list[Any] = [True, False, "1", None, {}, [], float("nan"), float("inf"), -1, 0]
+        for value in invalid:
+            document["scales"][0]["bytes_per_unit"] = value
+            (self.root / metadata_path).write_text(json.dumps(document), encoding="utf-8")
+            with self.assertRaisesRegex(ValueError, "factor"):
+                twin.factor_claims(self.root, self.source)
+        (self.root / metadata_path).write_bytes((ROOT / metadata_path).read_bytes())
+        document["scales"][0]["bytes_per_unit"] = True
+        producer = self.published_producer(0, document, metadata_path)
+        paths = [
+            twin.LOCK,
+            self.source["contract"],
+            "docs/features/index.md",
+            *[item["destination"] for item in self.source["artifacts"]],
+        ]
+        before = {name: (self.root / name).read_bytes() for name in paths}
+        with (
+            patch.object(twin, "run", side_effect=partial(self.producer_transport, producer)),
+            self.assertRaisesRegex(ValueError, "factor"),
+        ):
+            twin.generate(self.root, write=True)
+        self.assertEqual({name: (self.root / name).read_bytes() for name in paths}, before)
+
     def test_destination_types_refuse_before_any_write(self) -> None:
         for number, name in enumerate(
             [
