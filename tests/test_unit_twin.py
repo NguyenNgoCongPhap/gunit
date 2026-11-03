@@ -220,6 +220,51 @@ class TwinControls(unittest.TestCase):
             self.assertEqual(twin.generate(self.root, write=True), expected)
         self.assertEqual(twin.verify_local(self.root, self.source)["commit"], expected)
 
+    def test_destination_types_refuse_before_any_write(self) -> None:
+        for number, name in enumerate(
+            [
+                twin.LOCK,
+                "src/gunit/size.gleam",
+                "docs/generated/size.json",
+                "docs/features/index.md",
+            ]
+        ):
+            for leaf_directory in [True, False]:
+                with self.subTest(name=name, leaf_directory=leaf_directory):
+                    root = self.root / f"types-{number}-{leaf_directory}"
+                    root.mkdir()
+                    first = root / "first"
+                    first.write_bytes(b"unchanged")
+                    target = root / name
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    if leaf_directory:
+                        target.mkdir()
+                    else:
+                        target.write_bytes(b"parent is a regular file")
+                        name += "/child"
+                    with self.assertRaisesRegex(ValueError, "destination"):
+                        twin.write_outputs(root, {"first": b"changed", name: b"new"})
+                    self.assertEqual(first.read_bytes(), b"unchanged")
+
+    def test_directory_lock_refuses_without_replacing_artifacts(self) -> None:
+        metadata_path = next(
+            item["destination"]
+            for item in self.source["artifacts"]
+            if item["destination"].endswith(".json")
+        )
+        document = json.loads((ROOT / metadata_path).read_bytes())
+        producer = self.published_producer(0, document, metadata_path)
+        paths = [item["destination"] for item in self.source["artifacts"]]
+        before = {name: (self.root / name).read_bytes() for name in paths}
+        (self.root / twin.LOCK).unlink()
+        (self.root / twin.LOCK).mkdir()
+        with (
+            patch.object(twin, "run", side_effect=partial(self.producer_transport, producer)),
+            self.assertRaisesRegex(ValueError, "destination"),
+        ):
+            twin.generate(self.root, write=True)
+        self.assertEqual({name: (self.root / name).read_bytes() for name in paths}, before)
+
 
 class ProcessControls(unittest.TestCase):
     def setUp(self) -> None:

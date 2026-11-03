@@ -251,6 +251,14 @@ def generate(root: Path, *, write: bool) -> str:
 def write_outputs(root: Path, outputs: dict[str, bytes]) -> None:
     """Validate every destination before writing the already prepared output bytes."""
     destinations = {repository_path(root, name): data for name, data in outputs.items()}
+    for path in destinations:
+        if path.exists() and not path.is_file():
+            raise ValueError("unit-twin destination is not a regular file")
+        for parent in path.parents:
+            if parent == root:
+                break
+            if parent.exists() and not parent.is_dir():
+                raise ValueError("unit-twin destination parent is not a directory")
     for path, data in destinations.items():
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(data)
