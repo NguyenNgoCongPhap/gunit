@@ -10,6 +10,7 @@ import tomllib
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+from metadata_schema import require_schema_version
 from process_tools import GateToolError, run
 from verify_catalog import source_factors
 
@@ -37,11 +38,7 @@ def repository_path(root: Path, value: str) -> Path:
 def declaration(root: Path) -> dict[str, Any]:
     """Load a default-branch declaration; resolved commits belong only in the lock."""
     document = tomllib.loads(repository_path(root, "unit-twin.toml").read_text(encoding="utf-8"))
-    if (
-        type(document.get("schema_version")) is not int
-        or document["schema_version"] != SCHEMA_VERSION
-    ):
-        raise ValueError("unsupported unit-twin schema")
+    require_schema_version(document, SCHEMA_VERSION, "unit-twin manifest")
     if not re.fullmatch(r"https://github\.com/[\w-]+/[\w.-]+\.git", document["repository"]):
         raise ValueError("unit-twin producer must be an explicit GitHub HTTPS repository")
     if not re.fullmatch(r"[\w./-]+", document["branch"]):
@@ -119,6 +116,8 @@ def producer_bytes(
         )
         if actual.hexdigest() != blob or b"\r" in data:
             raise ValueError("unit-twin producer blob bytes refused")
+        if item["destination"].endswith(".json"):
+            require_schema_version(json.loads(data), SCHEMA_VERSION, "producer metadata")
         outputs.append((item, data, blob))
     return outputs
 
@@ -134,6 +133,7 @@ def factor_claims(root: Path, source: dict[str, Any]) -> list[str]:
         item["destination"] for item in source["artifacts"] if item["destination"].endswith(".json")
     )
     metadata = json.loads(repository_path(root, catalog).read_bytes())
+    require_schema_version(metadata, SCHEMA_VERSION, "producer metadata")
     lines = repository_path(root, module).read_text(encoding="utf-8").splitlines()
     factors = source_factors(lines, Path(module).stem)
     labels = {f"{Path(module).stem}.{scale['name']}_factor" for scale in metadata["scales"]}
@@ -153,11 +153,7 @@ def factor_claims(root: Path, source: dict[str, Any]) -> list[str]:
 def verify_local(root: Path, source: dict[str, Any]) -> dict[str, Any]:
     """Verify local bytes and code-derived facts without claiming remote freshness."""
     document = json.loads(repository_path(root, LOCK).read_bytes())
-    if (
-        type(document.get("schema_version")) is not int
-        or document["schema_version"] != SCHEMA_VERSION
-    ):
-        raise ValueError("unsupported unit-twin lock schema")
+    require_schema_version(document, SCHEMA_VERSION, "unit-twin lock")
     if (
         document.get("repository") != source["repository"]
         or document.get("branch") != source["branch"]
@@ -174,6 +170,7 @@ def verify_local(root: Path, source: dict[str, Any]) -> dict[str, Any]:
         if b"\r" in data or hashlib.sha256(data).hexdigest() != locked["sha256"]:
             raise ValueError(f"unit-twin output drift: {item['destination']}")
     contract = tomllib.loads(repository_path(root, source["contract"]).read_text(encoding="utf-8"))
+    require_schema_version(contract, SCHEMA_VERSION, "feature contract")
     if contract["factors"] != factor_claims(root, source):
         raise ValueError("unit-twin generated catalog facts drift")
     index = repository_path(root, str(PurePosixPath(source["contract"]).with_name("index.md")))
@@ -196,6 +193,7 @@ def catalog_index(directory: Path) -> str:
         if path.is_symlink():
             raise ValueError("catalog entries must not be symlinks")
         entry = tomllib.loads(path.read_text(encoding="utf-8"))
+        require_schema_version(entry, SCHEMA_VERSION, "feature contract")
         values = [
             str(entry[name]).replace("|", "\\|").replace("\n", " ")
             for name in ["id", "name", "status", "intensity", "intent"]
@@ -210,6 +208,7 @@ def write_contract_facts(root: Path, source: dict[str, Any]) -> None:
     contract = repository_path(root, source["contract"])
     index = repository_path(root, str(PurePosixPath(source["contract"]).with_name("index.md")))
     text = contract.read_text(encoding="utf-8")
+    require_schema_version(tomllib.loads(text), SCHEMA_VERSION, "feature contract")
     field = "factors = " + json.dumps(factor_claims(root, source))
     text, count = re.subn(r"(?ms)^factors\s*=\s*\[.*?\]", lambda _: field, text)
     if count != 1:

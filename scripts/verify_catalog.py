@@ -32,6 +32,8 @@ from collections import Counter
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from metadata_schema import require_schema_version
+
 REPO = Path(__file__).resolve().parent.parent
 CITATION = re.compile(r"\(?(src/gunit/[a-z_0-9]+\.gleam):(\d+)\)?")
 OPAQUE = re.compile(r"^pub opaque type (\w+)", re.M)
@@ -148,6 +150,7 @@ def entry_problems(
     path: Path, entry: dict, inventory: SourceInventory, claims: Claims
 ) -> list[str]:
     """Keep every label bound to its actual module, brands, factors and named tests."""
+    require_schema_version(entry, 1, "feature contract")
     problems = [f"missing required field {name}" for name in REQUIRED if name not in entry]
     status = entry.get("status")
     if status not in STATUSES:
