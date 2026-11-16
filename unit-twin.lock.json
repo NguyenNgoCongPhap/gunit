@@ -1,0 +1,20 @@
+{
+  "schema_version": 1,
+  "repository": "https://github.com/NguyenNgoCongPhap/struct-core.git",
+  "branch": "main",
+  "commit": "80b04392a12ad2098f093f6b9b2a1da4d304f1f0",
+  "artifacts": [
+    {
+      "source": "docs/generated/unit-twins/gleam/information_size.gleam",
+      "destination": "src/gunit/information_size.gleam",
+      "blob": "437dc8da063643a1331a7e02829f7c5e0f0ce219",
+      "sha256": "687033ea20b40c448797553f84ee7e436341cc4c1c9549e9f6e4101a4929e8fa"
+    },
+    {
+      "source": "docs/generated/unit-twins/catalog.json",
+      "destination": "docs/generated/information-size.json",
+      "blob": "9bf811a2b18cf56bcac47782566e63297e7d5f94",
+      "sha256": "aea1b4a27f9d9bfb546c20add7a73467b23fecf25b937af1aae4a0c6ba5ad2de"
+    }
+  ]
+}

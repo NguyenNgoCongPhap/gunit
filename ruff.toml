@@ -1,0 +1,46 @@
+# Strict-like-Rust lint for first-party Python (scripts/, src/). Generic template:
+# add project-specific `extend-exclude` / `per-file-ignores` in the target repo.
+target-version = "py313"
+line-length = 100
+
+extend-exclude = ["_scratch", "build", "dist"]
+
+[lint]
+select = [
+    "E", "F", "W", # pyflakes + pycodestyle
+    "I",           # isort
+    "N",           # pep8-naming
+    "UP",          # pyupgrade
+    "B",           # bugbear
+    "A",           # shadowing builtins
+    "C4",          # comprehensions
+    "SIM",         # simplify
+    "PTH",         # pathlib over os.path
+    "RET",         # return discipline
+    "TID",         # tidy imports
+    "RUF",         # ruff-specific
+    "S",           # bandit security
+    "C901",        # mccabe complexity cap (code.clean-limits)
+    "PLR2004",     # magic-value-comparison — no magic numbers
+    "PLR0912",     # too-many-branches (code.clean-limits)
+    "PLR0915",     # too-many-statements (code.clean-limits: fn <= 50 LOC)
+]
+
+[lint.per-file-ignores]
+"tests/**" = ["S101"]
+"**/*_test.py" = ["S101"]
+# A gate/orchestrator that spawns fixed, trusted tool commands.
+"scripts/check.py" = ["S603", "S607"]
+
+[lint.flake8-tidy-imports]
+ban-relative-imports = "all"
+
+[lint.mccabe]
+max-complexity = 10
+
+[lint.pylint]
+max-branches = 12
+max-statements = 50
+
+[format]
+docstring-code-format = true

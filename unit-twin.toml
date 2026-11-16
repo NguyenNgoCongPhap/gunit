@@ -1,0 +1,12 @@
+schema_version = 1
+repository = "https://github.com/NguyenNgoCongPhap/struct-core.git"
+branch = "main"
+contract = "docs/features/feat.units.information_size.v1.toml"
+
+[[artifacts]]
+source = "docs/generated/unit-twins/gleam/information_size.gleam"
+destination = "src/gunit/information_size.gleam"
+
+[[artifacts]]
+source = "docs/generated/unit-twins/catalog.json"
+destination = "docs/generated/information-size.json"
