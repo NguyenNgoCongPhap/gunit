@@ -9,9 +9,10 @@
 // SPDX-License-Identifier: MIT
 // Copyright (c) 2026 Cong Phap <tinhza2000@gmail.com>
 
-// ── factor: multiply a value in milliseconds by this to get seconds ──
+// ── factor: divide a value in milliseconds by this to get seconds; one correctly rounded division keeps every
+// whole number of milliseconds as close to its seconds as a Float can be, which multiplying by 0.001 does not ──
 
-const millisecond_factor = 0.001
+const millisecond_factor = 1000.0
 
 // ── factors: multiply a value in minutes, hours or days by these to get seconds (SI-accepted units, BIPM SI Brochure Table 8) ──
 
@@ -95,11 +96,11 @@ pub fn day_value(x: Day) -> Float {
 // ── conversions ──
 
 pub fn millisecond_to_second(x: Millisecond) -> Second {
-  Second(x.value *. millisecond_factor)
+  Second(x.value /. millisecond_factor)
 }
 
 pub fn second_to_millisecond(x: Second) -> Millisecond {
-  Millisecond(x.value /. millisecond_factor)
+  Millisecond(x.value *. millisecond_factor)
 }
 
 pub fn minute_to_second(x: Minute) -> Second {

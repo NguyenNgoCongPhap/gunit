@@ -735,6 +735,14 @@ pub fn millisecond_inverse_test() {
   |> should.be_true
 }
 
+pub fn millisecond_whole_count_is_exact_test() {
+  // 9 ms is exactly the Float 0.009 s; multiplying by 0.001 gives 0.009000000000000001.
+  time.millisecond(9.0)
+  |> time.millisecond_to_second
+  |> time.second_value
+  |> should.equal(0.009)
+}
+
 pub fn minute_forward_test() {
   // 1 min = 60 s.
   time.minute(1.0)
