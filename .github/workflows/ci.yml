@@ -1,10 +1,7 @@
 name: ci
 
 on:
-  push:
-    branches:
-      - main
-  pull_request:
+  workflow_dispatch:
 
 jobs:
   gate:
@@ -20,6 +17,7 @@ jobs:
         with:
           python-version: "3.12"
       - run: gleam deps download
+      - run: gleam build --warnings-as-errors
       - run: gleam test
       - run: gleam format --check src test
       # The catalog is authoritative for what each family promises, so an invented factor,
