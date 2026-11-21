@@ -3,13 +3,13 @@ id = "feat.units.time.v1"
 name = "Time brands and conversions"
 status = "completed"
 intensity = "calc"
-intent = "Separates second and millisecond durations while providing explicit conversion and Second-only arithmetic."
+intent = "Separates second, millisecond, minute, hour and day durations while providing explicit conversion and Second-only arithmetic."
 consequence_of_change = "A silent factor, brand, or canonical-unit change can rescale durations and corrupt dynamic, integration, timeout, or sampling calculations."
 acceptance = [
-  "Second and Millisecond remain distinct opaque brands with direct constructors and raw-value extractors.",
-  "Millisecond-to-Second conversion multiplies by the cited factor, and Second-to-Millisecond conversion divides by that same factor.",
+  "Second, Millisecond, Minute, Hour and Day remain distinct opaque brands with direct constructors and raw-value extractors.",
+  "Each unit-to-Second conversion multiplies by its cited factor, and each Second-to-unit conversion divides by that same factor.",
   "Add, subtract, and scale accept the canonical Second brand and return Second.",
-  "No operation implicitly coerces Millisecond to Second.",
+  "No operation implicitly coerces another time brand to Second.",
 ]
 non_goals = [
   "Providing clocks, dates, calendars, scheduling, or timeout side effects.",
@@ -17,16 +17,25 @@ non_goals = [
   "Providing arithmetic directly on Millisecond values or converting frequency to period.",
 ]
 failure = "No explicit failure path exists: construction, extraction, conversion, and arithmetic return directly without validation, clamping, or normalization; Float rounding and non-finite behavior are inherited from the underlying Float operations."
-brands = [ "Second", "Millisecond" ]
-units = "Brands are Second, the canonical arithmetic unit, and Millisecond, an edge/display unit; each constructor stores the raw Float in the named brand."
+brands = [ "Second", "Millisecond", "Minute", "Hour", "Day" ]
+units = "Brands are Second, the canonical arithmetic unit, and Millisecond, Minute, Hour and Day, edge/display units (a Day is exactly 86 400 s, never a calendar day); each constructor stores the raw Float in the named brand."
 factors = [
   "1 millisecond = 0.001 second (src/gunit/time.gleam:14)",
+  "1 minute = 60.0 second (src/gunit/time.gleam:18)",
+  "1 hour = 3600.0 second (src/gunit/time.gleam:20)",
+  "1 day = 86_400.0 second (src/gunit/time.gleam:22)",
 ]
 golden_tests = [
   "millisecond_forward_test (test/gunit_test.gleam)",
   "millisecond_inverse_test (test/gunit_test.gleam)",
+  "minute_forward_test (test/gunit_test.gleam)",
+  "minute_inverse_test (test/gunit_test.gleam)",
+  "hour_forward_test (test/gunit_test.gleam)",
+  "hour_inverse_test (test/gunit_test.gleam)",
+  "day_forward_test (test/gunit_test.gleam)",
+  "day_inverse_test (test/gunit_test.gleam)",
 ]
-provenance = "The factor is the module's millisecond-to-second definition; the source cites no external authority (src/gunit/time.gleam:12)."
+provenance = "The millisecond factor is the module's own SI-prefix definition (src/gunit/time.gleam:12); minute, hour and day are the non-SI units accepted for use with the SI, BIPM SI Brochure (9th edition) Table 8."
 
 # Edge cases
 # Zero and negative durations are accepted. A conversion round trip can incur ordinary

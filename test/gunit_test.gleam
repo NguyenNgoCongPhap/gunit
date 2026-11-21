@@ -735,6 +735,60 @@ pub fn millisecond_inverse_test() {
   |> should.be_true
 }
 
+pub fn minute_forward_test() {
+  // 1 min = 60 s.
+  time.minute(1.0)
+  |> time.minute_to_second
+  |> time.second_value
+  |> close(60.0)
+  |> should.be_true
+}
+
+pub fn minute_inverse_test() {
+  // 90 s = 1.5 min.
+  time.second(90.0)
+  |> time.second_to_minute
+  |> time.minute_value
+  |> close(1.5)
+  |> should.be_true
+}
+
+pub fn hour_forward_test() {
+  // 1 h = 3600 s.
+  time.hour(1.0)
+  |> time.hour_to_second
+  |> time.second_value
+  |> close(3600.0)
+  |> should.be_true
+}
+
+pub fn hour_inverse_test() {
+  // 5400 s = 1.5 h.
+  time.second(5400.0)
+  |> time.second_to_hour
+  |> time.hour_value
+  |> close(1.5)
+  |> should.be_true
+}
+
+pub fn day_forward_test() {
+  // 1 d = 86 400 s.
+  time.day(1.0)
+  |> time.day_to_second
+  |> time.second_value
+  |> close(86_400.0)
+  |> should.be_true
+}
+
+pub fn day_inverse_test() {
+  // 129 600 s = 1.5 d.
+  time.second(129_600.0)
+  |> time.second_to_day
+  |> time.day_value
+  |> close(1.5)
+  |> should.be_true
+}
+
 pub fn time_arithmetic_test() {
   // (2 s + 3 s) scaled by 1.5 = 7.5 s.
   time.add(time.second(2.0), time.second(3.0))
