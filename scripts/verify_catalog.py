@@ -41,6 +41,8 @@ CALC_REQUIRED = ("units", "factors", "golden_tests", "provenance")
 STATUSES = {"pending", "in-progress", "completed", "deprecated", "superseded"}
 # A retired ID is never reused or deleted, so it outlives the module it described.
 RETIRED = {"deprecated", "superseded"}
+SHORT_EXCERPT_CHARS = 60
+EXCERPT_CHARS = 70
 
 
 def normalize(value: str) -> str:
@@ -128,7 +130,7 @@ def main() -> int:
             documented += 1
             m = CITATION.search(claim)
             if not m:
-                problems.append(f"factor has no file:line citation: {claim[:60]}")
+                problems.append(f"factor has no file:line citation: {claim[:SHORT_EXCERPT_CHARS]}")
                 continue
             rel, lineno = m.group(1), int(m.group(2))
             if rel not in src_lines:
@@ -140,13 +142,13 @@ def main() -> int:
             if (rel, lineno) not in factor_at:
                 problems.append(
                     f"{rel}:{lineno} is not a factor constant - line is: "
-                    f"{src_lines[rel][lineno - 1].strip()[:70]}"
+                    f"{src_lines[rel][lineno - 1].strip()[:EXCERPT_CHARS]}"
                 )
                 continue
             const_name, value = factor_at[(rel, lineno)]
             covered[const_name] = covered.get(const_name, 0) + 1
             if not claims_value(claim, value):
-                problems.append(f"{const_name} is {value}, which the claim does not state: {claim[:70]}")
+                problems.append(f"{const_name} is {value}, which the claim does not state: {claim[:EXCERPT_CHARS]}")
             else:
                 resolved += 1
 
